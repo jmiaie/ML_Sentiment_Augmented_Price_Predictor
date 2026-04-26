@@ -1,10 +1,13 @@
-import os
+from pathlib import Path
 
-def create_file(path, content):
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, 'w', encoding='utf-8') as f:
-        f.write(content.strip())
+
+def create_file(path: str, content: str) -> None:
+    """Create a UTF-8 text file and ensure its parent directories exist."""
+    target = Path(path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(content.strip() + "\n", encoding="utf-8")
     print(f"✅ Created: {path}")
+
 
 # ==========================================
 # FILE CONTENTS
@@ -30,3 +33,13 @@ This project implements a rigorous Machine Learning pipeline for predicting shor
 # Docker
 docker build -t quant-ml .
 docker run quant-ml python backtest.py
+```
+"""
+
+
+def main() -> None:
+    create_file("README.md", README_CONTENT)
+
+
+if __name__ == "__main__":
+    main()
