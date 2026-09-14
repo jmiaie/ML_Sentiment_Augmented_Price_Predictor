@@ -1,0 +1,514 @@
+{
+  "label": "Synthetic methodology validation",
+  "question": "Does point-in-time sentiment add incremental predictive information beyond market-only features for short-horizon asset returns?",
+  "dataset_disclosure": "Synthetic data only. Historical results pending reproducible point-in-time dataset.",
+  "artifact_generation_mode": "deterministic",
+  "inputs": {
+    "sessions": 140,
+    "events": 278,
+    "symbol": "SYN",
+    "random_seed": 7,
+    "market_features": [
+      "market_return_1d",
+      "market_return_3d",
+      "market_volatility_3d",
+      "market_volume_z_3d"
+    ],
+    "sentiment_features": [
+      "sentiment_event_count_5d",
+      "sentiment_mean_5d",
+      "sentiment_weighted_mean_5d",
+      "sentiment_confidence_mean_5d"
+    ],
+    "primary_target": "next_session_direction",
+    "secondary_target": "next_two_session_direction"
+  },
+  "ablation_results": {
+    "gap": 0,
+    "label_horizon": 1,
+    "validation_split_count": 2,
+    "selected_regularization": {
+      "majority_baseline": null,
+      "market_only_logistic": 10.0,
+      "sentiment_only_logistic": 10.0,
+      "combined_logistic": 10.0
+    },
+    "validation_metrics": {
+      "majority_baseline": [
+        {
+          "samples": 20,
+          "accuracy": 0.4,
+          "balanced_accuracy": 0.5,
+          "precision": 0.4,
+          "recall": 1.0,
+          "f1": 0.5714285714285714,
+          "log_loss": 0.7541046886308891,
+          "brier_score": 0.2800000000000001,
+          "calibration_table": [
+            {
+              "bin_lower": 0.4,
+              "bin_upper": 0.6000000000000001,
+              "count": 20,
+              "mean_predicted_probability": 0.5999999999999999,
+              "observed_positive_rate": 0.4
+            }
+          ],
+          "roc_auc": 0.5,
+          "fold": "validation_fold_1"
+        },
+        {
+          "samples": 20,
+          "accuracy": 0.55,
+          "balanced_accuracy": 0.5,
+          "precision": 0.55,
+          "recall": 1.0,
+          "f1": 0.7096774193548387,
+          "log_loss": 0.6881388137135884,
+          "brier_score": 0.24749999999999997,
+          "calibration_table": [
+            {
+              "bin_lower": 0.4,
+              "bin_upper": 0.6000000000000001,
+              "count": 20,
+              "mean_predicted_probability": 0.5500000000000002,
+              "observed_positive_rate": 0.55
+            }
+          ],
+          "roc_auc": 0.5,
+          "fold": "validation_fold_2"
+        }
+      ],
+      "market_only_logistic": [
+        {
+          "samples": 20,
+          "accuracy": 0.85,
+          "balanced_accuracy": 0.8541666666666667,
+          "precision": 0.7777777777777778,
+          "recall": 0.875,
+          "f1": 0.8235294117647058,
+          "log_loss": 0.26832798367405314,
+          "brier_score": 0.09251511684575317,
+          "calibration_table": [
+            {
+              "bin_lower": 0.0,
+              "bin_upper": 0.2,
+              "count": 10,
+              "mean_predicted_probability": 0.0737626216186402,
+              "observed_positive_rate": 0.0
+            },
+            {
+              "bin_lower": 0.2,
+              "bin_upper": 0.4,
+              "count": 1,
+              "mean_predicted_probability": 0.2610752143345369,
+              "observed_positive_rate": 1.0
+            },
+            {
+              "bin_lower": 0.6000000000000001,
+              "bin_upper": 0.8,
+              "count": 1,
+              "mean_predicted_probability": 0.7314383676542134,
+              "observed_positive_rate": 0.0
+            },
+            {
+              "bin_lower": 0.8,
+              "bin_upper": 1.0,
+              "count": 8,
+              "mean_predicted_probability": 0.9470065022077081,
+              "observed_positive_rate": 0.875
+            }
+          ],
+          "roc_auc": 0.9791666666666667,
+          "fold": "validation_fold_1"
+        },
+        {
+          "samples": 20,
+          "accuracy": 0.95,
+          "balanced_accuracy": 0.9545454545454546,
+          "precision": 1.0,
+          "recall": 0.9090909090909091,
+          "f1": 0.9523809523809523,
+          "log_loss": 0.14066641778736122,
+          "brier_score": 0.03967257861238886,
+          "calibration_table": [
+            {
+              "bin_lower": 0.0,
+              "bin_upper": 0.2,
+              "count": 9,
+              "mean_predicted_probability": 0.05542089492175118,
+              "observed_positive_rate": 0.0
+            },
+            {
+              "bin_lower": 0.2,
+              "bin_upper": 0.4,
+              "count": 1,
+              "mean_predicted_probability": 0.3147746835584233,
+              "observed_positive_rate": 1.0
+            },
+            {
+              "bin_lower": 0.4,
+              "bin_upper": 0.6000000000000001,
+              "count": 1,
+              "mean_predicted_probability": 0.5744697589137079,
+              "observed_positive_rate": 1.0
+            },
+            {
+              "bin_lower": 0.6000000000000001,
+              "bin_upper": 0.8,
+              "count": 1,
+              "mean_predicted_probability": 0.7374682957726605,
+              "observed_positive_rate": 1.0
+            },
+            {
+              "bin_lower": 0.8,
+              "bin_upper": 1.0,
+              "count": 8,
+              "mean_predicted_probability": 0.9675667644200747,
+              "observed_positive_rate": 1.0
+            }
+          ],
+          "roc_auc": 1.0,
+          "fold": "validation_fold_2"
+        }
+      ],
+      "sentiment_only_logistic": [
+        {
+          "samples": 20,
+          "accuracy": 1.0,
+          "balanced_accuracy": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "log_loss": 0.09545159409318724,
+          "brier_score": 0.02360601263131799,
+          "calibration_table": [
+            {
+              "bin_lower": 0.0,
+              "bin_upper": 0.2,
+              "count": 11,
+              "mean_predicted_probability": 0.042576475090071376,
+              "observed_positive_rate": 0.0
+            },
+            {
+              "bin_lower": 0.4,
+              "bin_upper": 0.6000000000000001,
+              "count": 1,
+              "mean_predicted_probability": 0.4778032691918844,
+              "observed_positive_rate": 0.0
+            },
+            {
+              "bin_lower": 0.6000000000000001,
+              "bin_upper": 0.8,
+              "count": 2,
+              "mean_predicted_probability": 0.707287751148908,
+              "observed_positive_rate": 1.0
+            },
+            {
+              "bin_lower": 0.8,
+              "bin_upper": 1.0,
+              "count": 6,
+              "mean_predicted_probability": 0.9910211530378303,
+              "observed_positive_rate": 1.0
+            }
+          ],
+          "roc_auc": 1.0,
+          "fold": "validation_fold_1"
+        },
+        {
+          "samples": 20,
+          "accuracy": 1.0,
+          "balanced_accuracy": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "log_loss": 0.08050092283336485,
+          "brier_score": 0.016487672476701156,
+          "calibration_table": [
+            {
+              "bin_lower": 0.0,
+              "bin_upper": 0.2,
+              "count": 8,
+              "mean_predicted_probability": 0.028852997658515445,
+              "observed_positive_rate": 0.0
+            },
+            {
+              "bin_lower": 0.2,
+              "bin_upper": 0.4,
+              "count": 1,
+              "mean_predicted_probability": 0.2853092509828905,
+              "observed_positive_rate": 0.0
+            },
+            {
+              "bin_lower": 0.6000000000000001,
+              "bin_upper": 0.8,
+              "count": 2,
+              "mean_predicted_probability": 0.693332362419842,
+              "observed_positive_rate": 1.0
+            },
+            {
+              "bin_lower": 0.8,
+              "bin_upper": 1.0,
+              "count": 9,
+              "mean_predicted_probability": 0.9691774283784872,
+              "observed_positive_rate": 1.0
+            }
+          ],
+          "roc_auc": 1.0,
+          "fold": "validation_fold_2"
+        }
+      ],
+      "combined_logistic": [
+        {
+          "samples": 20,
+          "accuracy": 1.0,
+          "balanced_accuracy": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "log_loss": 0.10429333302920833,
+          "brier_score": 0.02740375109966935,
+          "calibration_table": [
+            {
+              "bin_lower": 0.0,
+              "bin_upper": 0.2,
+              "count": 11,
+              "mean_predicted_probability": 0.03495834841143879,
+              "observed_positive_rate": 0.0
+            },
+            {
+              "bin_lower": 0.2,
+              "bin_upper": 0.4,
+              "count": 1,
+              "mean_predicted_probability": 0.39422431802822394,
+              "observed_positive_rate": 0.0
+            },
+            {
+              "bin_lower": 0.4,
+              "bin_upper": 0.6000000000000001,
+              "count": 1,
+              "mean_predicted_probability": 0.5558236283463863,
+              "observed_positive_rate": 1.0
+            },
+            {
+              "bin_lower": 0.6000000000000001,
+              "bin_upper": 0.8,
+              "count": 1,
+              "mean_predicted_probability": 0.6014422135781397,
+              "observed_positive_rate": 1.0
+            },
+            {
+              "bin_lower": 0.8,
+              "bin_upper": 1.0,
+              "count": 6,
+              "mean_predicted_probability": 0.9858769973276202,
+              "observed_positive_rate": 1.0
+            }
+          ],
+          "roc_auc": 1.0,
+          "fold": "validation_fold_1"
+        },
+        {
+          "samples": 20,
+          "accuracy": 1.0,
+          "balanced_accuracy": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "log_loss": 0.11680042173856953,
+          "brier_score": 0.03170998826868016,
+          "calibration_table": [
+            {
+              "bin_lower": 0.0,
+              "bin_upper": 0.2,
+              "count": 7,
+              "mean_predicted_probability": 0.01381172890091156,
+              "observed_positive_rate": 0.0
+            },
+            {
+              "bin_lower": 0.2,
+              "bin_upper": 0.4,
+              "count": 1,
+              "mean_predicted_probability": 0.2877167652104089,
+              "observed_positive_rate": 0.0
+            },
+            {
+              "bin_lower": 0.4,
+              "bin_upper": 0.6000000000000001,
+              "count": 2,
+              "mean_predicted_probability": 0.49196428934688835,
+              "observed_positive_rate": 0.5
+            },
+            {
+              "bin_lower": 0.6000000000000001,
+              "bin_upper": 0.8,
+              "count": 1,
+              "mean_predicted_probability": 0.7116170563911147,
+              "observed_positive_rate": 1.0
+            },
+            {
+              "bin_lower": 0.8,
+              "bin_upper": 1.0,
+              "count": 9,
+              "mean_predicted_probability": 0.9682395244150721,
+              "observed_positive_rate": 1.0
+            }
+          ],
+          "roc_auc": 1.0,
+          "fold": "validation_fold_2"
+        }
+      ]
+    },
+    "test_metrics": {
+      "majority_baseline": {
+        "samples": 20,
+        "accuracy": 0.25,
+        "balanced_accuracy": 0.5,
+        "precision": 0.25,
+        "recall": 1.0,
+        "f1": 0.4,
+        "log_loss": 0.7539908724408317,
+        "brier_score": 0.28029447072946834,
+        "calibration_table": [
+          {
+            "bin_lower": 0.4,
+            "bin_upper": 0.6000000000000001,
+            "count": 20,
+            "mean_predicted_probability": 0.5546218487394958,
+            "observed_positive_rate": 0.25
+          }
+        ],
+        "roc_auc": 0.5
+      },
+      "market_only_logistic": {
+        "samples": 20,
+        "accuracy": 0.9,
+        "balanced_accuracy": 0.8,
+        "precision": 1.0,
+        "recall": 0.6,
+        "f1": 0.75,
+        "log_loss": 0.2065776246656613,
+        "brier_score": 0.06658468856228403,
+        "calibration_table": [
+          {
+            "bin_lower": 0.0,
+            "bin_upper": 0.2,
+            "count": 14,
+            "mean_predicted_probability": 0.026730079290651205,
+            "observed_positive_rate": 0.07142857142857142
+          },
+          {
+            "bin_lower": 0.2,
+            "bin_upper": 0.4,
+            "count": 2,
+            "mean_predicted_probability": 0.3261414858739238,
+            "observed_positive_rate": 0.0
+          },
+          {
+            "bin_lower": 0.4,
+            "bin_upper": 0.6000000000000001,
+            "count": 1,
+            "mean_predicted_probability": 0.41272837427565784,
+            "observed_positive_rate": 1.0
+          },
+          {
+            "bin_lower": 0.8,
+            "bin_upper": 1.0,
+            "count": 3,
+            "mean_predicted_probability": 0.8559512991542452,
+            "observed_positive_rate": 1.0
+          }
+        ],
+        "roc_auc": 0.9733333333333334
+      },
+      "sentiment_only_logistic": {
+        "samples": 20,
+        "accuracy": 0.95,
+        "balanced_accuracy": 0.9,
+        "precision": 1.0,
+        "recall": 0.8,
+        "f1": 0.8888888888888888,
+        "log_loss": 0.08887852207720784,
+        "brier_score": 0.022934481611971095,
+        "calibration_table": [
+          {
+            "bin_lower": 0.0,
+            "bin_upper": 0.2,
+            "count": 13,
+            "mean_predicted_probability": 0.011465955594387768,
+            "observed_positive_rate": 0.0
+          },
+          {
+            "bin_lower": 0.2,
+            "bin_upper": 0.4,
+            "count": 2,
+            "mean_predicted_probability": 0.23327575358340588,
+            "observed_positive_rate": 0.0
+          },
+          {
+            "bin_lower": 0.4,
+            "bin_upper": 0.6000000000000001,
+            "count": 1,
+            "mean_predicted_probability": 0.45433078234324126,
+            "observed_positive_rate": 1.0
+          },
+          {
+            "bin_lower": 0.8,
+            "bin_upper": 1.0,
+            "count": 4,
+            "mean_predicted_probability": 0.9301417200659143,
+            "observed_positive_rate": 1.0
+          }
+        ],
+        "roc_auc": 1.0
+      },
+      "combined_logistic": {
+        "samples": 20,
+        "accuracy": 1.0,
+        "balanced_accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "log_loss": 0.08613405091949673,
+        "brier_score": 0.021717136888390096,
+        "calibration_table": [
+          {
+            "bin_lower": 0.0,
+            "bin_upper": 0.2,
+            "count": 13,
+            "mean_predicted_probability": 0.01161266331931804,
+            "observed_positive_rate": 0.0
+          },
+          {
+            "bin_lower": 0.2,
+            "bin_upper": 0.4,
+            "count": 1,
+            "mean_predicted_probability": 0.21773813308805617,
+            "observed_positive_rate": 0.0
+          },
+          {
+            "bin_lower": 0.4,
+            "bin_upper": 0.6000000000000001,
+            "count": 2,
+            "mean_predicted_probability": 0.5132073578010683,
+            "observed_positive_rate": 0.5
+          },
+          {
+            "bin_lower": 0.8,
+            "bin_upper": 1.0,
+            "count": 4,
+            "mean_predicted_probability": 0.9451173086791067,
+            "observed_positive_rate": 1.0
+          }
+        ],
+        "roc_auc": 1.0
+      }
+    },
+    "test_window": {
+      "start_session": "2024-06-17",
+      "end_session": "2024-07-15",
+      "samples": 20
+    }
+  },
+  "ablation_conclusion": "In this synthetic methodology validation, the combined model outperformed both single-source logistic baselines on the held-out test window. This is consistent with the injected incremental signal and is not historical evidence.",
+  "uncertainty": "Synthetic validation confirms pipeline behavior only. It does not establish real-world predictive value, robustness across assets, or economic viability."
+}

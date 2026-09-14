@@ -1,3 +1,17 @@
+Metadata-Version: 2.4
+Name: quant-sentiment
+Version: 0.1.0
+Summary: Point-in-time sentiment incremental predictive value validation framework
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+Requires-Dist: numpy>=2.1.1
+Requires-Dist: pandas>=2.2.2
+Requires-Dist: scikit-learn>=1.5.2
+Provides-Extra: dev
+Requires-Dist: mypy>=1.11.2; extra == "dev"
+Requires-Dist: pytest>=8.3.3; extra == "dev"
+Requires-Dist: ruff>=0.6.9; extra == "dev"
+
 # ML_Sentiment_Augmented_Price_Predictor
 
 This repository is a lean validation framework for one question:
