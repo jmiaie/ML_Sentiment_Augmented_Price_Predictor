@@ -87,14 +87,9 @@ def generate_synthetic_inputs(
             ]
         )
 
-    market_frame = pd.DataFrame(
-        {
-            "session": sessions,
-            "decision_timestamp": [calendar.session_close(session) for session in sessions],
-            "close": closes,
-            "volume": volumes,
-        }
-    )
+    market_frame = calendar.decision_cutoffs(sessions)
+    market_frame["close"] = closes
+    market_frame["volume"] = volumes
     events_frame = events_to_frame(sentiment_events, calendar.resolve_effective_trading_timestamp)
     return market_frame, events_frame
 

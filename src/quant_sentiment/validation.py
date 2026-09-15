@@ -46,13 +46,17 @@ def build_walk_forward_plan(
     while train_end + gap + validation_size <= development_observations:
         evaluation_start = train_end + gap
         evaluation_end = evaluation_start + validation_size
-        validation_splits.append(
-            WalkForwardSplit(
-                name=f"validation_fold_{fold_number}",
-                train_indices=np.arange(0, train_end, dtype=int),
-                evaluation_indices=np.arange(evaluation_start, evaluation_end, dtype=int),
-            )
+        split = WalkForwardSplit(
+            name=f"validation_fold_{fold_number}",
+            train_indices=np.arange(0, train_end, dtype=int),
+            evaluation_indices=np.arange(evaluation_start, evaluation_end, dtype=int),
         )
+        assert labels_are_non_overlapping(split, label_horizon), (
+            f"{split.name}: train/evaluation gap is smaller than label_horizon "
+            f"({label_horizon}); this indicates a bug in the gap computation above, "
+            "not a caller error."
+        )
+        validation_splits.append(split)
         train_end += step_size
         fold_number += 1
 
@@ -62,6 +66,15 @@ def build_walk_forward_plan(
     pre_test_train_indices = np.arange(0, development_observations, dtype=int)
     test_start = development_observations + gap
     test_indices = np.arange(test_start, test_start + test_size, dtype=int)
+
+    test_split = WalkForwardSplit(
+        name="test", train_indices=pre_test_train_indices, evaluation_indices=test_indices
+    )
+    assert labels_are_non_overlapping(test_split, label_horizon), (
+        "test: train/evaluation gap is smaller than label_horizon "
+        f"({label_horizon}); this indicates a bug in the gap computation above, "
+        "not a caller error."
+    )
 
     return WalkForwardPlan(
         validation_splits=validation_splits,

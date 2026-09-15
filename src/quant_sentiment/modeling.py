@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 from math import inf
 from typing import Any
 
@@ -22,12 +21,6 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
 from .validation import WalkForwardPlan, WalkForwardSplit, build_walk_forward_plan
-
-
-@dataclass(frozen=True)
-class ModelSelectionResult:
-    best_c: float | None
-    validation_metrics: list[dict[str, Any]]
 
 
 def _build_pipeline(c_value: float) -> Pipeline:
@@ -131,7 +124,7 @@ def _tune_logistic_model(
     feature_columns: list[str],
     target_column: str,
     c_values: tuple[float, ...],
-) -> ModelSelectionResult:
+) -> tuple[float | None, list[dict[str, Any]]]:
     best_c: float | None = None
     best_loss = inf
     best_metrics: list[dict[str, Any]] = []
@@ -153,7 +146,7 @@ def _tune_logistic_model(
             best_c = c_value
             best_metrics = fold_metrics
 
-    return ModelSelectionResult(best_c=best_c, validation_metrics=best_metrics)
+    return best_c, best_metrics
 
 
 def _majority_validation_metrics(
@@ -223,15 +216,15 @@ def run_ablation_study(
             )
             continue
 
-        selection_result = _tune_logistic_model(
+        best_c, fold_metrics = _tune_logistic_model(
             frame=working,
             splits=plan.validation_splits,
             feature_columns=feature_columns,
             target_column=target_column,
             c_values=c_values,
         )
-        selected_regularization[model_name] = selection_result.best_c
-        validation_metrics[model_name] = selection_result.validation_metrics
+        selected_regularization[model_name] = best_c
+        validation_metrics[model_name] = fold_metrics
 
     pre_test_train_frame = working.iloc[plan.pre_test_train_indices]
     test_frame = working.iloc[plan.test_indices]
