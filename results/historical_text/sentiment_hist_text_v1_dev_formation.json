@@ -1,0 +1,168 @@
+{
+  "branch": "research/historical-text-validation",
+  "config_path": "configs/experiments/sentiment_historical_text_study_v1.yaml",
+  "config_status": "frozen-for-holdout",
+  "dataset_canonical_sha256": "3037e83fd53bcb18b31decaaca130ce57ac9c8a37f8d8454d8e7c45d344a64d6",
+  "dataset_id": "edgar_8k_yf_megacap_daily_2015_2025_v1",
+  "experiment_id": "sentiment_hist_text_v1_dev_formation",
+  "primary_symbol": "AAPL",
+  "result": {
+    "eval_period": {
+      "end": "2023-12-31",
+      "name": "formation_dev",
+      "start": "2015-01-01"
+    },
+    "formation": {
+      "end": "2023-12-31",
+      "name": "formation_dev",
+      "start": "2015-01-01"
+    },
+    "key_metrics": {
+      "combined_accuracy": 0.5362190812720848,
+      "combined_brier_score": 0.2484629477964129,
+      "combined_log_loss": 0.6900541604123945,
+      "combined_roc_auc": 0.5176006244915632,
+      "delta_log_loss_combined_minus_market": -0.00011567120341793302,
+      "eval_end_session": "2023-12-29",
+      "eval_start_session": "2015-01-02",
+      "lexicon_id": "sentiment_d9_financial_polarity_v1",
+      "lexicon_version": "1",
+      "majority_accuracy": 0.5287102473498233,
+      "majority_log_loss": 0.6914977168443347,
+      "market_only_accuracy": 0.536660777385159,
+      "market_only_log_loss": 0.6901698316158125,
+      "market_only_roc_auc": 0.5155672686871818,
+      "n_eval_rows": 2264,
+      "n_formation_rows": 2264,
+      "n_sentiment_events_in_frame": 344,
+      "selected_regularization": {
+        "combined_logistic": 0.1,
+        "majority_baseline": null,
+        "market_only_logistic": 0.1,
+        "sentiment_only_logistic": 0.1
+      },
+      "sentiment_only_accuracy": 0.5287102473498233,
+      "sentiment_only_log_loss": 0.6914494197250682,
+      "sentiment_only_roc_auc": 0.5017871138326917,
+      "walk_forward_fold_count": 109,
+      "walk_forward_gap": 0
+    },
+    "notes": "Historical EDGAR 8-K subset + yfinance prices. Lexicon polarity scores are deterministic and not LM-complete. No invented filing text or labels. C selected on formation walk-forward only; eval uses locked C.",
+    "period_metrics": {
+      "combined_logistic": {
+        "accuracy": 0.5362190812720848,
+        "balanced_accuracy": 0.5135135558358565,
+        "brier_score": 0.2484629477964129,
+        "calibration_table": [
+          {
+            "bin_lower": 0.2,
+            "bin_upper": 0.4,
+            "count": 7,
+            "mean_predicted_probability": 0.3662161755656891,
+            "observed_positive_rate": 0.14285714285714285
+          },
+          {
+            "bin_lower": 0.4,
+            "bin_upper": 0.6000000000000001,
+            "count": 2249,
+            "mean_predicted_probability": 0.5289185489418224,
+            "observed_positive_rate": 0.529568697198755
+          },
+          {
+            "bin_lower": 0.6000000000000001,
+            "bin_upper": 0.8,
+            "count": 8,
+            "mean_predicted_probability": 0.6123730049828496,
+            "observed_positive_rate": 0.625
+          }
+        ],
+        "f1": 0.6745195288282703,
+        "log_loss": 0.6900541604123945,
+        "precision": 0.5362247412518482,
+        "recall": 0.908939014202172,
+        "roc_auc": 0.5176006244915632,
+        "samples": 2264
+      },
+      "majority_baseline": {
+        "accuracy": 0.5287102473498233,
+        "balanced_accuracy": 0.5,
+        "brier_score": 0.24917572169711202,
+        "calibration_table": [
+          {
+            "bin_lower": 0.4,
+            "bin_upper": 0.6000000000000001,
+            "count": 2264,
+            "mean_predicted_probability": 0.5287102473498234,
+            "observed_positive_rate": 0.5287102473498233
+          }
+        ],
+        "f1": 0.6917075989598382,
+        "log_loss": 0.6914977168443347,
+        "precision": 0.5287102473498233,
+        "recall": 1.0,
+        "roc_auc": 0.5,
+        "samples": 2264
+      },
+      "market_only_logistic": {
+        "accuracy": 0.536660777385159,
+        "balanced_accuracy": 0.5134223406062799,
+        "brier_score": 0.24851982973964162,
+        "calibration_table": [
+          {
+            "bin_lower": 0.2,
+            "bin_upper": 0.4,
+            "count": 8,
+            "mean_predicted_probability": 0.37178336462795736,
+            "observed_positive_rate": 0.25
+          },
+          {
+            "bin_lower": 0.4,
+            "bin_upper": 0.6000000000000001,
+            "count": 2252,
+            "mean_predicted_probability": 0.5291440915421391,
+            "observed_positive_rate": 0.5297513321492007
+          },
+          {
+            "bin_lower": 0.6000000000000001,
+            "bin_upper": 0.8,
+            "count": 4,
+            "mean_predicted_probability": 0.6088183300643925,
+            "observed_positive_rate": 0.5
+          }
+        ],
+        "f1": 0.6769325531259625,
+        "log_loss": 0.6901698316158125,
+        "precision": 0.5360975609756098,
+        "recall": 0.9181286549707602,
+        "roc_auc": 0.5155672686871818,
+        "samples": 2264
+      },
+      "sentiment_only_logistic": {
+        "accuracy": 0.5287102473498233,
+        "balanced_accuracy": 0.5,
+        "brier_score": 0.24915172623908682,
+        "calibration_table": [
+          {
+            "bin_lower": 0.4,
+            "bin_upper": 0.6000000000000001,
+            "count": 2264,
+            "mean_predicted_probability": 0.528700245207276,
+            "observed_positive_rate": 0.5287102473498233
+          }
+        ],
+        "f1": 0.6917075989598382,
+        "log_loss": 0.6914494197250682,
+        "precision": 0.5287102473498233,
+        "recall": 1.0,
+        "roc_auc": 0.5017871138326917,
+        "samples": 2264
+      }
+    },
+    "selected_regularization": {
+      "combined_logistic": 0.1,
+      "majority_baseline": null,
+      "market_only_logistic": 0.1,
+      "sentiment_only_logistic": 0.1
+    }
+  }
+}
