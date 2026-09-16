@@ -11,7 +11,11 @@ The current implementation is intentionally modest and reproducible:
 - no claims of historical sentiment alpha
 - deterministic synthetic workflows for methodology validation
 
-Historical results pending reproducible point-in-time dataset.
+Historical D9 study (branch `research/historical-text-validation`, unmerged):
+reproducible megacap EDGAR 8-K subset + yfinance prices with PIT lexicon scores.
+See `research/holdout-audit.md`, `data/manifests/`, and `results/historical_text/`.
+Synthetic methodology artifacts remain non-substitutes for historical claims.
+
 
 ## Scope
 
