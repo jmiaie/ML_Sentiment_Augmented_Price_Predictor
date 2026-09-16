@@ -1,0 +1,2 @@
+experiment_id,repo,branch,dataset_id,config_path,status,period_name,period_start,period_end,primary_symbol,seed,artifact_path,artifact_sha256,key_metrics_json,notes,created_utc
+sentiment_hist_text_v1_prereg,ML_Sentiment_Augmented_Price_Predictor,research/historical-text-validation,edgar_8k_yf_megacap_daily_2015_2025_v1,configs/experiments/sentiment_historical_text_study_v1.yaml,PRE-REGISTERED_DRAFT_NOT_YET_FROZEN_FOR_HOLDOUT,pre_registration,,,AAPL,7,,,,Skeleton pre-registration; development parameters not frozen for holdout; no 2025 evaluation,2026-09-16T04:05:00Z
