@@ -8,67 +8,24 @@
     "lexicon_version": "1"
   },
   "universe_description": "Reproducible megacap subset: AAPL/MSFT/AMZN daily yfinance prices + SEC EDGAR 8-K primary-document text scored with embedded financial polarity lexicon v1. Not the full EDGAR corpus; not LM-complete.",
-  "symbols": [
-    "AAPL",
-    "MSFT",
-    "AMZN"
-  ],
+  "symbols": ["AAPL", "MSFT", "AMZN"],
   "ciks": {
     "AAPL": "0000320193",
     "MSFT": "0000789019",
     "AMZN": "0001018724"
   },
-  "form_types": [
-    "8-K"
-  ],
+  "form_types": ["8-K"],
   "interval": "1d",
   "requested_start": "2015-01-01",
   "requested_end_exclusive": "2026-01-01",
-  "actual_start": {
-    "AAPL": "2015-01-02",
-    "MSFT": "2015-01-02",
-    "AMZN": "2015-01-02"
-  },
-  "actual_end": {
-    "AAPL": "2025-12-31",
-    "MSFT": "2025-12-31",
-    "AMZN": "2025-12-31"
-  },
-  "row_counts": {
-    "AAPL": 2766,
-    "MSFT": 2766,
-    "AMZN": 2766
-  },
-  "missing_counts": {
-    "AAPL": 0,
-    "MSFT": 0,
-    "AMZN": 0
-  },
+  "actual_start": {"AAPL": "2015-01-02", "MSFT": "2015-01-02", "AMZN": "2015-01-02"},
+  "actual_end": {"AAPL": "2025-12-31", "MSFT": "2025-12-31", "AMZN": "2025-12-31"},
+  "row_counts": {"AAPL": 2766, "MSFT": 2766, "AMZN": 2766},
+  "missing_counts": {"AAPL": 0, "MSFT": 0, "AMZN": 0},
   "filing_stats": {
-    "AAPL": {
-      "filings_listed": 106,
-      "filings_ok": 106,
-      "filings_failed": 0,
-      "events": 106,
-      "first_filing": "2015-01-27",
-      "last_filing": "2025-12-05"
-    },
-    "MSFT": {
-      "filings_listed": 112,
-      "filings_ok": 112,
-      "filings_failed": 0,
-      "events": 112,
-      "first_filing": "2015-01-26",
-      "last_filing": "2025-12-08"
-    },
-    "AMZN": {
-      "filings_listed": 104,
-      "filings_ok": 104,
-      "filings_failed": 0,
-      "events": 104,
-      "first_filing": "2015-01-29",
-      "last_filing": "2025-11-20"
-    }
+    "AAPL": {"filings_listed": 106, "filings_ok": 106, "filings_failed": 0, "events": 106, "first_filing": "2015-01-27", "last_filing": "2025-12-05"},
+    "MSFT": {"filings_listed": 112, "filings_ok": 112, "filings_failed": 0, "events": 112, "first_filing": "2015-01-26", "last_filing": "2025-12-08"},
+    "AMZN": {"filings_listed": 104, "filings_ok": 104, "filings_failed": 0, "events": 104, "first_filing": "2015-01-29", "last_filing": "2025-11-20"}
   },
   "retrieval_timestamp_utc": "2026-09-16T04:06:12Z",
   "freeze_timestamp_utc": "2026-09-16T04:11:21Z",
@@ -79,9 +36,7 @@
     "interval": "1d",
     "auto_adjust": true,
     "actions": true,
-    "forms": [
-      "8-K"
-    ],
+    "forms": ["8-K"],
     "sec_user_agent": "jmiaie ML_Sentiment_D9 research jmilam.emba@gmail.com",
     "lexicon_id": "sentiment_d9_financial_polarity_v1",
     "lexicon_version": "1",
@@ -93,12 +48,12 @@
     "Three megacap issuers only",
     "Simplified embedded polarity lexicon (not full Loughran-McDonald)",
     "Primary document text truncated at 200k chars",
-    "yfinance prices are not exchange-official tapes"
+    "yfinance prices are not exchange-official tapes",
+    "Per-file SHA-256 map retained locally under data/raw/ (gitignored); re-acquire regenerates it"
   ],
-  "notes": "Frozen after local SEC EDGAR + yfinance acquisition. Raw files remain gitignored under data/raw/. Re-acquire with same parameters and compare dataset_canonical if regenerating. Subset limitations recorded in manifest. Per-file SHA-256 map lives in edgar_8k_yf_megacap_daily_2015_2025_v1.filesha256.json to keep the primary manifest reviewable; dataset_canonical is unchanged.",
+  "notes": "Frozen after local SEC EDGAR + yfinance acquisition. Raw files remain gitignored under data/raw/. Re-acquire with scripts/acquire_edgar_8k_yf_megacap_daily.py and compare sha256.dataset_canonical. Committed manifest carries dataset_canonical plus provenance; full per-file hash map stays with the local freeze (331 files) to avoid oversized git blobs.",
   "sha256": {
     "dataset_canonical": "3037e83fd53bcb18b31decaaca130ce57ac9c8a37f8d8454d8e7c45d344a64d6",
-    "file_hash_count": 331,
-    "file_hashes_relpath": "data/manifests/edgar_8k_yf_megacap_daily_2015_2025_v1.filesha256.json"
+    "file_hash_count": 331
   }
 }
