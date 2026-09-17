@@ -390,6 +390,7 @@ def main(argv: list[str] | None = None) -> int:
                 validation_size=int(walk_forward["validation_size"]),
                 step_size=int(walk_forward["step_size"]),
                 formation_internal_test_size=int(walk_forward["formation_internal_test_size"]),
+                calendar=calendar,
             )
         selection_artifact: dict[str, Any] = {
             "experiment_id": experiment_id,
@@ -443,6 +444,7 @@ def main(argv: list[str] | None = None) -> int:
                 initial_train_size=int(walk_forward["initial_train_size"]),
                 validation_size=int(walk_forward["validation_size"]),
                 formation_internal_test_size=int(walk_forward["formation_internal_test_size"]),
+                calendar=calendar,
                 step_size=int(walk_forward["step_size"]),
             )
             artifact: dict[str, Any] = {

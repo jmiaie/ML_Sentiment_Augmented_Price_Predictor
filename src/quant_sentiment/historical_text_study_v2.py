@@ -40,6 +40,7 @@ from .modeling import (
     _majority_validation_metrics,
     _tune_logistic_model,
 )
+from .nyse_calendar import NyseCalendar
 from .validation import WalkForwardSplit
 from .walk_forward_v2 import (
     EventSplit,
@@ -55,6 +56,24 @@ SECONDARY_EMBARGO_SESSIONS = 5
 # The 2024 validation window is the LAST window allowed to influence
 # regularization selection. 2025 is an evaluation window, never a selection one.
 FINAL_C_SELECTION_MAX_SESSION = "2024-12-31"
+
+# Which forward-window end column belongs to which target. A dict (rather than
+# an if/else) so an unknown target column RAISES instead of silently slicing on
+# the secondary target's window.
+TARGET_END_ORDINAL_COLUMN: dict[str, str] = {
+    PRIMARY_TARGET_COLUMN: "primary_target_end_session_ordinal",
+    SECONDARY_TARGET_COLUMN: "secondary_target_end_session_ordinal",
+}
+
+
+def _target_end_ordinal_column(target_column: str) -> str:
+    try:
+        return TARGET_END_ORDINAL_COLUMN[target_column]
+    except KeyError:
+        raise ValueError(
+            f"unknown target column {target_column!r}; expected one of "
+            f"{sorted(TARGET_END_ORDINAL_COLUMN)}"
+        ) from None
 
 MODEL_SPECS: dict[str, list[str]] = {
     "model0_majority_baseline": [],
@@ -76,10 +95,64 @@ class PeriodSpec:
         day = session.date() if isinstance(session, pd.Timestamp) else session
         return bool((day - start).days >= 0 and (end - day).days >= 0)
 
+    def last_session_ordinal(self, calendar: NyseCalendar) -> int:
+        """Ordinal of this period's last real NYSE session.
 
-def slice_period(frame: pd.DataFrame, period: PeriodSpec) -> pd.DataFrame:
-    mask = frame["effective_session"].map(lambda s: period.contains_session(s))
-    return frame.loc[mask].reset_index(drop=True)
+        ``end_inclusive`` is a calendar date (2023-12-31 is a Sunday), so the
+        period boundary has to be resolved against the actual session
+        calendar -- never approximated with calendar-day arithmetic.
+        """
+        last_day = calendar.last_session_on_or_before(date.fromisoformat(self.end_inclusive))
+        return calendar.session_ordinal(last_day)
+
+
+def slice_period(
+    frame: pd.DataFrame,
+    period: PeriodSpec,
+    *,
+    target_column: str,
+    calendar: NyseCalendar,
+) -> tuple[pd.DataFrame, dict[str, Any]]:
+    """Rows of ``frame`` that belong to ``period`` FOR ``target_column``.
+
+    Two conditions, both session-ordinal based against the same NYSE calendar
+    that built the frame:
+
+    1. ``effective_session`` falls inside the period, and
+    2. that target's complete forward label window CLOSES inside the period
+       (``*_target_end_session_ordinal <= period.last_session_ordinal``).
+
+    Condition 2 is the target-horizon boundary invariant: a filing's target can
+    end after the period it was filed in (a 2024-12-30 filing's 5-session
+    target ends in Jan-2025). Slicing on ``effective_session`` alone would let
+    those next-period outcomes into the period's evidence -- for the 2024
+    validation window that means 2025 information could reach final-C
+    selection, i.e. "pre-2025 C selection" consuming 2025 outcomes.
+
+    Returns ``(frame_for_period, stats)``; ``stats`` carries the boundary
+    exclusions separately by target and period so downstream artifacts can
+    report them rather than hide them.
+    """
+    end_col = _target_end_ordinal_column(target_column)
+    last_ordinal = period.last_session_ordinal(calendar)
+    in_period = frame["effective_session"].map(period.contains_session)
+    end_ordinal = frame[end_col]
+    window_closed = end_ordinal.notna() & (end_ordinal <= last_ordinal)
+    crossing = in_period & end_ordinal.notna() & ~window_closed
+    missing_end = in_period & end_ordinal.isna()
+
+    stats: dict[str, Any] = {
+        "period": period.name,
+        "target_column": target_column,
+        "period_last_session": str(calendar.session_at_ordinal(last_ordinal)),
+        "period_last_session_ordinal": int(last_ordinal),
+        "n_rows_in_frame": int(frame.shape[0]),
+        "n_effective_session_in_period": int(in_period.sum()),
+        "n_included": int((in_period & window_closed).sum()),
+        "n_excluded_target_window_crossing": int(crossing.sum()),
+        "n_excluded_missing_target_end": int(missing_end.sum()),
+    }
+    return frame.loc[in_period & window_closed].reset_index(drop=True), stats
 
 
 def _as_validation_splits(splits: list[EventSplit]) -> list[WalkForwardSplit]:
@@ -124,11 +197,7 @@ def _build_formation_plan(
                 f"(n={n_form}, need > {initial_train_size + validation_size + test_size})"
             )
 
-    end_col = (
-        "primary_target_end_session_ordinal"
-        if target_column == PRIMARY_TARGET_COLUMN
-        else "secondary_target_end_session_ordinal"
-    )
+    end_col = _target_end_ordinal_column(target_column)
     return build_purged_event_walk_forward_plan(
         formation_frame["effective_session_ordinal"],
         formation_frame[end_col],
@@ -151,6 +220,7 @@ def select_final_c_on_validation(
     validation_size: int,
     step_size: int,
     formation_internal_test_size: int,
+    calendar: NyseCalendar,
     c_values: tuple[float, ...] = C_GRID,
 ) -> dict[str, Any]:
     """Select the FINAL C on PRE-2025 evidence only.
@@ -164,6 +234,11 @@ def select_final_c_on_validation(
     validation period ending after ``FINAL_C_SELECTION_MAX_SESSION`` is
     refused rather than silently consumed. Ties break toward the smaller
     (more regularized) C.
+
+    Both slices are target-window bounded via ``slice_period``, so a 2024
+    event whose forward target closes in 2025 is excluded from BOTH the
+    training and the validation evidence -- the pre-2025 selection cannot
+    consume a 2025 outcome through a boundary row.
     """
     if validation.end_inclusive > FINAL_C_SELECTION_MAX_SESSION:
         raise RuntimeError(
@@ -173,9 +248,15 @@ def select_final_c_on_validation(
             "regularization selection."
         )
 
-    formation_frame = slice_period(full_frame, formation).dropna(subset=[target_column])
+    formation_frame, formation_slice = slice_period(
+        full_frame, formation, target_column=target_column, calendar=calendar
+    )
+    formation_frame = formation_frame.dropna(subset=[target_column])
     formation_frame = formation_frame.reset_index(drop=True)
-    validation_frame = slice_period(full_frame, validation).dropna(subset=[target_column])
+    validation_frame, validation_slice = slice_period(
+        full_frame, validation, target_column=target_column, calendar=calendar
+    )
+    validation_frame = validation_frame.dropna(subset=[target_column])
     validation_frame = validation_frame.reset_index(drop=True)
 
     if formation_frame.empty:
@@ -237,6 +318,12 @@ def select_final_c_on_validation(
         "n_formation_rows": int(formation_frame.shape[0]),
         "n_pre_2025_train_rows": int(pre_2025_train_frame.shape[0]),
         "n_validation_rows": int(validation_frame.shape[0]),
+        # Rows dropped because their forward target window closes outside the
+        # period they belong to -- reported per target/period, not hidden.
+        "target_window_slicing": {
+            "formation": formation_slice,
+            "validation": validation_slice,
+        },
         "validation_embargo_sessions": embargo_sessions,
         "selected_c": selected_c,
         "validation_log_loss_by_model_and_c": log_loss_by_model_and_c,
@@ -307,6 +394,7 @@ def run_period_study(
     target_column: str,
     embargo_sessions: int,
     allow_holdout: bool,
+    calendar: NyseCalendar,
     fixed_c: dict[str, float | None] | None = None,
     initial_train_size: int = 60,
     validation_size: int = 20,
@@ -333,9 +421,15 @@ def run_period_study(
         if missing:
             raise ValueError(f"fixed_c is missing entries for {missing}")
 
-    formation_frame = slice_period(full_frame, formation).dropna(subset=[target_column])
+    formation_frame, formation_slice = slice_period(
+        full_frame, formation, target_column=target_column, calendar=calendar
+    )
+    formation_frame = formation_frame.dropna(subset=[target_column])
     formation_frame = formation_frame.reset_index(drop=True)
-    eval_frame = slice_period(full_frame, eval_period).dropna(subset=[target_column])
+    eval_frame, eval_slice = slice_period(
+        full_frame, eval_period, target_column=target_column, calendar=calendar
+    )
+    eval_frame = eval_frame.dropna(subset=[target_column])
     eval_frame = eval_frame.reset_index(drop=True)
 
     if formation_frame.empty:
@@ -441,6 +535,14 @@ def run_period_study(
     key_metrics = {
         "n_formation_rows": int(formation_frame.shape[0]),
         "n_eval_rows": int(eval_frame.shape[0]),
+        # Session-ordinal boundary exclusions, per target and period: rows whose
+        # effective session is in the period but whose forward target closes
+        # outside it, so the period's evidence never consumes a later period's
+        # outcomes. Separate from the ordinary dropna/missing-label count.
+        "target_window_slicing": {
+            "formation": formation_slice,
+            "evaluation": eval_slice,
+        },
         "n_unique_issuers_eval": int(eval_frame["ticker"].nunique()),
         "eval_start_session": str(eval_frame["effective_session"].iloc[0].date()),
         "eval_end_session": str(eval_frame["effective_session"].iloc[-1].date()),
