@@ -54,6 +54,17 @@ This acquires and freezes two datasets:
 Flags: `--no-freeze` for a validate-only dry run, `--max-filings-per-symbol N`
 to sanity-check on a small slice first, `--raw-dir PATH` to redirect output.
 
+**The freeze refuses if any filing failed to acquire** (status stays
+unfrozen, exit code 2) -- pacing/throttling from SEC's own rate limits
+makes a transient per-filing failure possible on a long run; failures are
+always visible per-row in each symbol's `filings/{SYMBOL}_index.csv`
+regardless. Re-running is safe and resumable (already-downloaded `.txt`
+files are skipped, not re-fetched) -- just re-run the same command until
+it reports zero failures. Only pass `--allow-partial` if a deliberately
+partial freeze is wanted; the manifest then reads
+`"DATA FROZEN (PARTIAL: N failed)"` rather than plain `"DATA FROZEN"`, so
+that distinction is never silent.
+
 ## CIK map — now independently verified live, all 12 correct
 
 `scripts/acquire_sec_filings_12issuer_daily.py`'s `SYMBOL_CIK` maps all 12
@@ -74,14 +85,19 @@ mapping. No CIK in the map points at the wrong company.
 
 ## What comes back
 
-Hand back (or push to this branch):
+Portable via git (push to this branch):
 
 1. `data/manifests/sec_filings_12issuer_2015_2025_v1.json`
 2. `data/manifests/yf_sentiment_equities_daily_2015_2025_v1.json`
-3. The full `data/raw/sec_filings_12issuer_2015_2025_v1/` and
-   `data/raw/yf_sentiment_equities_daily_2015_2025_v1/` trees (needed
-   locally to run the study — never committed, per this repo's own
-   `data/raw/` gitignore convention)
+
+**Not portable via git, by design**: the raw `data/raw/sec_filings_12issuer_2015_2025_v1/`
+and `data/raw/yf_sentiment_equities_daily_2015_2025_v1/` trees are gitignored
+and never committed. State this plainly so nobody plans a "send the raw
+data over" step: whoever runs the actual DEV/VAL/2025 study (step 4 below)
+must do so **on the same host, or a host with that same local `data/raw/`
+tree**, that ran the acquisition -- the committed manifests carry the
+hashes for verification, but the canonical hash is only recomputable
+where the raw bytes actually live.
 
 ## What happens after data lands
 
