@@ -207,8 +207,11 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help=(
             "run the PRE-2025 final-C selection (purged formation train -> 2024 "
-            "validation) and write the selection report; runs no period study and "
-            "never reads 2025"
+            "validation) and write the selection report. Produces NO ordinary "
+            "DEV / 2024 / 2025 period-study result artifacts, but it DOES compute "
+            "the pre-specified 2024 validation log loss for all four C candidates "
+            "per model and target as the model-selection evidence, and never reads "
+            "2025"
         ),
     )
     args = parser.parse_args(argv)

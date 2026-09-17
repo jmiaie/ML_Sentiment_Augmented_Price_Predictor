@@ -11,19 +11,28 @@
 #
 # Methodology here (universe, features, targets, models, C grid, embargo) is
 # taken directly from Directive #9's own D9-D spec text -- none of it was
-# derived from or tuned against any observed result, so this config is frozen
-# on creation, matching D9-C's own precedent in this program.
+# derived from or tuned against any observed result, so the METHODOLOGY is
+# PRE-REGISTERED here. (The earlier "frozen on creation" wording was wrong and
+# is corrected: pre-registration is not a freeze.) The FINAL CONFIGURATION is
+# NOT frozen yet -- it is frozen only after DEV + 2024 validation have produced
+# a reviewed final-C selection, immediately before the single 2025 historical
+# evaluation. See "CHRONOLOGY".
 #
 # EXECUTION STATUS (2026-09-17, MEASURED -- supersedes the earlier "corpus has
 # NOT been acquired / egress proxy blocks SEC" note, which was a session-local
 # proxy artifact, not an environment fact): the 12-issuer SEC EDGAR 10-K/10-Q/8-K
 # corpus IS acquired -- 2,349 filings, 12/12 issuers, zero acquisition failures,
 # UNCAPPED text (max 1,565,337 chars; 0 files at the legacy 200,000-char
-# boundary). Both manifests remain status VALIDATED with
-# freeze_timestamp_utc: null: the authoritative corpus is deliberately NOT
-# frozen yet. Code + tests pass on synthetic fixtures, and the dedicated
-# authoritative runner scripts/run_historical_text_study_v2.py is
-# fixture-tested end to end without network access.
+# boundary). Both authoritative input datasets are FROZEN: the filings and
+# prices manifests are status DATA FROZEN with freeze_timestamp_utc
+# 2026-09-17T20:46:08Z, frozen by scripts/freeze_d9d_snapshot.py under commit
+# 869db9048fd938080669894358aa84bf7d30e557 (filings canonical
+# 3b2941870391b8584afaad46417cf3e6a0fe03509238fc6ac21958bb4c90f7f4, prices
+# canonical 6ca6e433983fb5f629d084d0964229d5b9c91cbee0756f686598bea6c90d4cb2).
+# That frozen pair is immutable input evidence. Code + tests pass on synthetic
+# fixtures, and the dedicated authoritative runner
+# scripts/run_historical_text_study_v2.py is fixture-tested end to end without
+# network access.
 #
 # CHRONOLOGY (corrected 2026-09-17 -- the earlier freeze record was premature
 # and is removed; it asserted a methodology freeze while no pre-2025 evidence
@@ -144,6 +153,15 @@ walk_forward:
   # is frozen before the 2025 HISTORICAL EVALUATION reads it verbatim. A target
   # is usable only once all three logistic models carry a selected value;
   # model0_majority_baseline is the baseline and is always null.
+  #
+  # What --select-final-c does and does NOT produce (clarified -- the earlier
+  # wording "runs no period study" was misleading): it writes NO ordinary
+  # DEV / 2024-validation / 2025 period-study result artifacts (no
+  # *_dev_formation.json, no *_val_2024.json, no *_holdout_2025.json, no
+  # per-model period metrics). It DOES compute the pre-specified 2024 validation
+  # log loss for all four C candidates, per model and per target, and report the
+  # argmin -- that grid IS the model-selection evidence this file is populated
+  # from, and it is pre-2025-only by construction.
   final_selected_c:
     primary: null
     secondary: null
@@ -223,6 +241,19 @@ status_history:
       chars" limitation in the filings manifest was also corrected to the measured
       uncapped-extraction fact. No DEV, 2024 or 2025 number was produced by any of
       this, and both manifests remain VALIDATED with freeze_timestamp_utc: null.
+  - utc: "2026-09-17T20:46:08Z"
+    event: both authoritative input datasets frozen (VALIDATED -> DATA FROZEN)
+    note: >
+      APPENDED, not a rewrite: the entry above was true when written and stays.
+      scripts/freeze_d9d_snapshot.py flipped BOTH dataset manifests to DATA
+      FROZEN at 2026-09-17T20:46:08Z (committed as 869db904...) -- byte
+      preserving, zero network access, recording the 13 per-file price CSV
+      hashes and both canonical dataset hashes (filings 3b294187...; prices
+      6ca6e433...). Independent post-freeze review PASSED on that commit. The
+      frozen pair is now immutable input evidence: no re-freeze, no further
+      manifest edit, no re-acquisition. Superseded prose that still said both
+      manifests "remain VALIDATED" / "deliberately NOT frozen" has been
+      corrected above.
 
 notes: >
   This is not a claim that point-in-time text adds predictive value --
