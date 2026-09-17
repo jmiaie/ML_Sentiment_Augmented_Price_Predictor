@@ -201,8 +201,8 @@
     }
   },
   "retrieval_timestamp_utc": "2026-09-17T16:39:02Z",
-  "freeze_timestamp_utc": null,
-  "status": "VALIDATED",
+  "freeze_timestamp_utc": "2026-09-17T20:46:08Z",
+  "status": "DATA FROZEN",
   "sha256": {
     "filings/AAPL_index.csv": "5114d4d1287459e3ffa048e17457117130e50d607fdbf0bb134268b0ad0d8d43",
     "filings/AMZN_index.csv": "9fed12125c86e4210c2298d4c21996b2976392879e1e80971dee4cef0d63070d",
