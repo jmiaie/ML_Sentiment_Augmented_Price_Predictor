@@ -149,6 +149,7 @@ def run_period_study(
     target_column: str,
     embargo_sessions: int,
     allow_holdout: bool,
+    fixed_c: dict[str, float | None] | None = None,
     initial_train_size: int = 60,
     validation_size: int = 20,
     step_size: int = 20,
@@ -159,12 +160,20 @@ def run_period_study(
 ) -> dict[str, Any]:
     """Tune C on formation-period purged walk-forward only; evaluate once
     on eval_period with the locked C (per model) -- freeze-before-2025
-    discipline mirrors D9-A/B/C's own pattern in this program."""
+    discipline mirrors D9-A/B/C's own pattern in this program.
+
+    ``fixed_c`` (post-freeze path): when supplied, C is NOT re-selected at all
+    -- the values frozen from pre-2025 evidence are used verbatim, so a 2025
+    evaluation cannot tune on its own window."""
     if eval_period.name in ("historical_evaluation", "holdout") and not allow_holdout:
         raise RuntimeError(
             "2025 evaluation blocked until FINAL CONFIGURATION FROZEN "
             "(pass allow_holdout=True only after freeze)."
         )
+    if fixed_c is not None:
+        missing = [name for name in MODEL_SPECS if name not in fixed_c]
+        if missing:
+            raise ValueError(f"fixed_c is missing entries for {missing}")
 
     formation_frame = slice_period(full_frame, formation).dropna(subset=[target_column])
     formation_frame = formation_frame.reset_index(drop=True)
@@ -212,6 +221,14 @@ def run_period_study(
                 splits=validation_splits,
                 target_column=target_column,
             )
+            continue
+        if fixed_c is not None:
+            # Post-freeze evaluation path (2025): C was selected on PRE-2025
+            # evidence and written into the frozen config. Re-tuning here would
+            # silently re-select C on the evaluation window itself, which
+            # constraints.no_retune_after_freeze forbids.
+            selected_regularization[model_name] = fixed_c[model_name]
+            validation_metrics[model_name] = []
             continue
         selection = _tune_logistic_model(
             frame=formation_frame,
@@ -305,6 +322,7 @@ def run_period_study(
         "headline_bootstrap_delta_log_loss_ci95": headline_bootstrap,
         "headline_fold_delta_log_loss_distribution": fold_deltas,
         "selected_regularization": selected_regularization,
+        "c_selection": "fixed_from_frozen_config" if fixed_c is not None else "tuned_on_formation",
         "walk_forward_fold_count": len(plan.validation_splits),
         "embargo_sessions": embargo_sessions,
     }

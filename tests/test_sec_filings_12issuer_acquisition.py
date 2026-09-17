@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import re
 import urllib.error
 from pathlib import Path
 from types import ModuleType
@@ -100,6 +101,10 @@ def _patch_network(
         call_state["symbol_index"] += 1
         return result
 
+    # Change D: the authoritative path sources its SEC contact from the
+    # environment (sec_http.user_agent() fails loudly when it is absent), so the
+    # offline fixture must supply one -- and never a hard-coded personal string.
+    monkeypatch.setenv("SEC_USER_AGENT", "Fixture Suite research fixtures@example.invalid")
     monkeypatch.setattr(acq, "fetch_company_filings", fake_fetch_company_filings)
     monkeypatch.setattr(acq, "_sec_get_text", fake_sec_get_text)
     monkeypatch.setattr(acq, "download_prices", fake_download_prices)
@@ -145,3 +150,50 @@ def test_freeze_with_allow_partial_labels_status_explicitly(
     assert manifest["status"] == "DATA FROZEN (PARTIAL: 1 failed)"
     total_failed = sum(s["filings_failed"] for s in manifest["filing_stats"].values())
     assert total_failed == 1
+
+
+def test_uncapped_extraction_is_not_truncated() -> None:
+    """max_chars=None must return the FULL text (the cap lift); the default still truncates."""
+    from quant_sentiment.edgar_text import html_to_plain_text
+
+    body = "<p>" + ("word " * 60_000) + "</p>"   # ~300k chars after whitespace collapse
+    assert len(html_to_plain_text(body, max_chars=None)) > 250_000
+    assert len(html_to_plain_text(body)) == 200_000        # default cap still enforced
+
+
+def test_manifest_provenance_and_uncapped_policy_are_recorded(
+    acq: ModuleType, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Change F: the manifest must carry producing-script provenance, the
+    extraction policy as MEASURED truncation counts, per-file hashes and the
+    canonical dataset hash -- and must not carry a plaintext SEC contact."""
+    _patch_network(monkeypatch, acq, tmp_path, fail_first=False)
+    assert acq.main([]) == 0
+    manifest = json.loads(
+        (tmp_path / "data" / "manifests" / f"{acq.FILINGS_DATASET_ID}.json").read_text()
+    )
+    params = manifest["parameters"]
+
+    assert params["extraction_policy"] == "uncapped"
+    assert params["text_max_chars"] is None
+    assert params["truncation_count"] == 0
+    assert params["text_files_at_legacy_cap_200000"] == 0
+    assert params["text_n_files"] == sum(
+        s["filings_ok"] for s in manifest["filing_stats"].values()
+    )
+
+    assert re.fullmatch(r"[0-9a-f]{64}", params["acquisition_script_sha256"])
+    assert params["acquisition_script"].endswith("acquire_sec_filings_12issuer_daily.py")
+    assert re.fullmatch(r"[0-9a-f]{64}", params["sec_user_agent_sha256"])
+    assert "sec_user_agent" not in params  # hash only -- no plaintext contact
+    assert "git_head" in params
+
+    by_form = params["filing_counts_by_form"]
+    assert sum(by_form.values()) == params["filings_ok_total"]
+    assert params["filing_counts_by_issuer"]["AAPL"] == 2   # fixture: two filings, both OK
+    assert params["filings_failed_total"] == 0
+
+    hashes = manifest["sha256"]
+    assert hashes is not None
+    assert "dataset_canonical" in hashes
+    assert len([k for k in hashes if k.endswith(".txt")]) == params["text_n_files"]

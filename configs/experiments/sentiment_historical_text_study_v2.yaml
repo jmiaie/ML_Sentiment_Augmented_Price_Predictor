@@ -1,5 +1,6 @@
 # Sentiment/textual-signal historical validation (D9-D) — AUTHORITATIVE v2
-# Status: frozen-for-holdout (methodology only -- see "Execution status" below)
+# Status: PRE-REGISTERED (methodology authored from the spec text and never
+# tuned on any observed result). NOT frozen-for-holdout -- see "Execution status".
 #
 # Supersedes sentiment_historical_text_study_v1.yaml, which Directive #9 itself
 # labels EXPLORATORY / NON-CONFORMING TO FINAL D9-D (3 issuers, 8-K only,
@@ -13,14 +14,23 @@
 # derived from or tuned against any observed result, so this config is frozen
 # on creation, matching D9-C's own precedent in this program.
 #
-# EXECUTION STATUS (2026-09-17): code + tests are complete and pass on
-# synthetic fixtures (tests/test_nyse_calendar.py, test_lm_dictionary.py,
-# test_market_features_v2.py, test_walk_forward_v2.py, test_event_frame_v2.py,
-# test_historical_text_study_v2.py). The 12-issuer SEC EDGAR 10-K/10-Q/8-K
-# corpus has NOT been acquired -- this session's egress proxy blocks
-# data.sec.gov and www.sec.gov (confirmed, 403). See
-# docs/D9_D_ACQUISITION_HANDOFF.md for the network-capable handoff needed
-# before formation_dev/validation/historical_evaluation can actually run.
+# EXECUTION STATUS (2026-09-17, MEASURED -- supersedes the earlier "corpus has
+# NOT been acquired / egress proxy blocks SEC" note, which was a session-local
+# proxy artifact, not an environment fact): the 12-issuer SEC EDGAR 10-K/10-Q/8-K
+# corpus IS acquired -- 2,349 filings, 12/12 issuers, zero acquisition failures,
+# UNCAPPED text (max 1,565,337 chars; 0 files at the legacy 200,000-char
+# boundary). Both manifests remain status VALIDATED with
+# freeze_timestamp_utc: null: the authoritative corpus is deliberately NOT
+# frozen yet. Code + tests pass on synthetic fixtures, and the dedicated
+# authoritative runner scripts/run_historical_text_study_v2.py is
+# fixture-tested end to end without network access.
+#
+# CHRONOLOGY (corrected 2026-09-17 -- the earlier freeze record was premature
+# and is removed; it asserted a methodology freeze while no pre-2025 evidence
+# existed, inverting the required order):
+#   pre-register (this file) -> acquire + freeze corpus -> DEV ->
+#   2024 validation -> select final C -> write final_selected_c here ->
+#   freeze config -> gate 2025 exactly once as HISTORICAL EVALUATION.
 #
 # IMPORTANT HOLDOUT CLASSIFICATION (per Directive #9's own D9-D spec text):
 # the existing v1 study already inspected 2025 outcomes for AAPL/MSFT/AMZN,
@@ -31,7 +41,7 @@
 # 2026 (reserved program-wide).
 
 experiment_id: sentiment_hist_text_v2
-status: frozen-for-holdout
+status: pre-registered
 directive: 9
 dataset_ids:
   filings: sec_filings_12issuer_2015_2025_v1
@@ -119,6 +129,11 @@ walk_forward:
   formation_internal_test_size: 20
   step_size: 20
   c_values: [0.01, 0.1, 1.0, 10.0]
+  # Pre-2025-selected final C, one entry per model, written here ONLY after DEV
+  # + 2024 validation have been reviewed. The 2025 historical evaluation
+  # refuses to start unless this is populated, and never re-selects C on 2025
+  # data (constraints.no_retune_after_freeze). null = not yet selected.
+  final_selected_c: null
 
 confirmatory_models:
   model0_majority_baseline: unconditional majority-class baseline
@@ -165,15 +180,19 @@ constraints:
   no_ci_network_fetch: true
   no_2026_use_yet: true
 
-freeze_record:
-  frozen_for_holdout_utc: "2026-09-17T00:00:00Z"
-  basis: >
-    Methodology (universe, features, targets, models, C grid, embargo) taken
-    directly from Directive #9's own D9-D spec text, not derived from or
-    tuned against any observed result -- frozen on creation. Real 12-issuer
-    acquisition is a separate, pending step (see docs/D9_D_ACQUISITION_HANDOFF.md);
-    freezing methodology now does not retroactively justify tuning it after
-    acquisition lands.
+status_history:
+  - utc: "2026-09-17T00:00:00Z"
+    event: methodology authored from Directive #9's own D9-D spec text
+    note: >
+      Universe, features, targets, models, C grid and embargo all come from the
+      spec text; none of it was derived from or tuned against any observed
+      result.
+  - utc: "2026-09-17T18:00:00Z"
+    event: status corrected frozen-for-holdout -> pre-registered
+    note: >
+      The earlier freeze record was premature and has been removed: it asserted a
+      methodology freeze while no pre-2025 evidence existed yet, inverting the
+      required chronology. No v2 2025 result exists and none was produced.
 
 notes: >
   This is not a claim that point-in-time text adds predictive value --

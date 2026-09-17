@@ -1,0 +1,101 @@
+{
+  "dataset_id": "yf_sentiment_equities_daily_2015_2025_v1",
+  "source": "yfinance",
+  "source_version": {
+    "yfinance": "1.7.0"
+  },
+  "universe_description": "Daily yfinance OHLCV for the D9-D 12-issuer universe plus SPY (market context for excess-return labeling).",
+  "symbols": [
+    "AAPL",
+    "MSFT",
+    "AMZN",
+    "GOOGL",
+    "NVDA",
+    "JPM",
+    "XOM",
+    "JNJ",
+    "PG",
+    "WMT",
+    "HD",
+    "KO",
+    "SPY"
+  ],
+  "interval": "1d",
+  "requested_start": "2015-01-01",
+  "requested_end_exclusive": "2026-01-01",
+  "actual_start": {
+    "AAPL": "2015-01-02",
+    "MSFT": "2015-01-02",
+    "AMZN": "2015-01-02",
+    "GOOGL": "2015-01-02",
+    "NVDA": "2015-01-02",
+    "JPM": "2015-01-02",
+    "XOM": "2015-01-02",
+    "JNJ": "2015-01-02",
+    "PG": "2015-01-02",
+    "WMT": "2015-01-02",
+    "HD": "2015-01-02",
+    "KO": "2015-01-02",
+    "SPY": "2015-01-02"
+  },
+  "actual_end": {
+    "AAPL": "2025-12-31",
+    "MSFT": "2025-12-31",
+    "AMZN": "2025-12-31",
+    "GOOGL": "2025-12-31",
+    "NVDA": "2025-12-31",
+    "JPM": "2025-12-31",
+    "XOM": "2025-12-31",
+    "JNJ": "2025-12-31",
+    "PG": "2025-12-31",
+    "WMT": "2025-12-31",
+    "HD": "2025-12-31",
+    "KO": "2025-12-31",
+    "SPY": "2025-12-31"
+  },
+  "row_counts": {
+    "AAPL": 2766,
+    "MSFT": 2766,
+    "AMZN": 2766,
+    "GOOGL": 2766,
+    "NVDA": 2766,
+    "JPM": 2766,
+    "XOM": 2766,
+    "JNJ": 2766,
+    "PG": 2766,
+    "WMT": 2766,
+    "HD": 2766,
+    "KO": 2766,
+    "SPY": 2766
+  },
+  "missing_counts": {
+    "AAPL": 0,
+    "MSFT": 0,
+    "AMZN": 0,
+    "GOOGL": 0,
+    "NVDA": 0,
+    "JPM": 0,
+    "XOM": 0,
+    "JNJ": 0,
+    "PG": 0,
+    "WMT": 0,
+    "HD": 0,
+    "KO": 0,
+    "SPY": 0
+  },
+  "retrieval_timestamp_utc": "2026-09-17T16:39:02Z",
+  "freeze_timestamp_utc": null,
+  "status": "VALIDATED",
+  "sha256": null,
+  "parameters": {
+    "start": "2015-01-01",
+    "end": "2026-01-01",
+    "interval": "1d",
+    "auto_adjust": true,
+    "actions": true
+  },
+  "limitations": [
+    "yfinance prices are not exchange-official tapes."
+  ],
+  "notes": "Raw CSVs under data/raw/ are gitignored, never committed."
+}

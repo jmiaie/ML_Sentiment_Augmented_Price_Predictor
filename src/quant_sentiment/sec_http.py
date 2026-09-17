@@ -9,25 +9,51 @@ defect: v1 is classified EXPLORATORY / NON-CONFORMING LEGACY EVIDENCE, so
 retiring or refactoring it would silently break v2's acquisition path and
 its SEC rate-limit politeness. Moved into the package so both scripts (and
 any future one) depend on this module, not on each other.
+
+The User-Agent contact is supplied by the ``SEC_USER_AGENT`` environment
+variable at call time (SEC EDGAR requires a descriptive agent carrying a real
+contact). No personal contact string is hard-coded here.
 """
 
 from __future__ import annotations
 
 import json
+import os
 import time
 import urllib.parse
 import urllib.request
 from typing import Any
 
-SEC_USER_AGENT = "jmiaie ML_Sentiment_D9 research jmilam.emba@gmail.com"
 SEC_SLEEP_SECONDS = 0.25
+
+
+def user_agent() -> str:
+    """Return the SEC User-Agent, sourced from the environment at call time.
+
+    Fails loudly rather than sending a blank User-Agent to SEC (which invites
+    throttling/blocking) when the variable is missing or whitespace-only.
+    """
+    value = os.environ.get("SEC_USER_AGENT", "").strip()
+    if not value:
+        raise RuntimeError(
+            "SEC_USER_AGENT is not set (or is blank). SEC EDGAR requires a "
+            "descriptive User-Agent carrying a real contact address, e.g.\n"
+            '  export SEC_USER_AGENT="Your Org research you@example.com"'
+        )
+    return value
+
+
+# Deprecated: legacy (v1) callers import this name for their manifest record.
+# It is no longer a hard-coded contact string, and authoritative v2 code must
+# call user_agent() instead so a missing environment value fails loudly.
+SEC_USER_AGENT = os.environ.get("SEC_USER_AGENT", "").strip()
 
 
 def sec_get(url: str) -> bytes:
     request = urllib.request.Request(
         url,
         headers={
-            "User-Agent": SEC_USER_AGENT,
+            "User-Agent": user_agent(),
             "Accept-Encoding": "identity",
             "Host": urllib.parse.urlparse(url).netloc,
         },
