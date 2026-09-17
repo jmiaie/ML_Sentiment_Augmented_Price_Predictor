@@ -17,10 +17,7 @@ import argparse
 import hashlib
 import json
 import sys
-import time
 import urllib.error
-import urllib.parse
-import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -39,8 +36,6 @@ REQUESTED_START = "2015-01-01"
 REQUESTED_END_EXCLUSIVE = "2026-01-01"
 FORM_TYPES = ("8-K",)
 OHLCV_COLS = ["Open", "High", "Low", "Close", "Volume"]
-SEC_USER_AGENT = "jmiaie ML_Sentiment_D9 research jmilam.emba@gmail.com"
-SEC_SLEEP_SECONDS = 0.25
 
 # Import lexicon/scorer from package when available; script also works after editable install.
 ROOT = Path(__file__).resolve().parents[1]
@@ -49,6 +44,9 @@ if str(ROOT / "src") not in sys.path:
 
 from quant_sentiment.edgar_text import html_to_plain_text  # noqa: E402
 from quant_sentiment.lexicon import LEXICON_ID, LEXICON_VERSION, score_text  # noqa: E402
+from quant_sentiment.sec_http import SEC_USER_AGENT  # noqa: E402
+from quant_sentiment.sec_http import sec_get_json as _sec_get_json  # noqa: E402
+from quant_sentiment.sec_http import sec_get_text as _sec_get_text  # noqa: E402
 
 
 def _repo_root() -> Path:
@@ -70,32 +68,6 @@ def sha256_file(path: Path) -> str:
 def canonical_dataset_hash(file_hashes: dict[str, str]) -> str:
     payload = "\n".join(f"{k}:{v}" for k, v in sorted(file_hashes.items())) + "\n"
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
-
-
-def _sec_get(url: str) -> bytes:
-    request = urllib.request.Request(
-        url,
-        headers={
-            "User-Agent": SEC_USER_AGENT,
-            "Accept-Encoding": "identity",
-            "Host": urllib.parse.urlparse(url).netloc,
-        },
-    )
-    # urllib.parse.urlparse is fine; Host override helps some CDNs.
-    with urllib.request.urlopen(request, timeout=60) as response:
-        return response.read()
-
-
-def _sec_get_json(url: str) -> dict[str, Any]:
-    time.sleep(SEC_SLEEP_SECONDS)
-    raw = _sec_get(url)
-    return json.loads(raw.decode("utf-8"))
-
-
-def _sec_get_text(url: str) -> str:
-    time.sleep(SEC_SLEEP_SECONDS)
-    raw = _sec_get(url)
-    return raw.decode("utf-8", errors="replace")
 
 
 def fetch_company_filings(cik: str) -> list[dict[str, Any]]:

@@ -10,11 +10,14 @@
     the same 12 issuers plus SPY (market context).
 
 THIS SCRIPT REQUIRES LIVE NETWORK ACCESS TO data.sec.gov / www.sec.gov AND
-Yahoo Finance, WHICH THIS SESSION'S EGRESS PROXY BLOCKS (confirmed: both
-SEC hosts return a 403 CONNECT-tunnel rejection here). It is therefore
-prepared as a HANDOFF: run it from an environment with real SEC EDGAR
-access, then hand back data/manifests/*.json plus data/raw/ (gitignored,
-do not commit) so this repo's v2 study can run against real filings.
+Yahoo Finance. The session that wrote this script had those hosts blocked
+by its own egress proxy policy (confirmed 403 CONNECT-tunnel rejection) --
+not a statement about SEC EDGAR/Yahoo Finance's actual availability, which
+a host with ordinary network access reaches without issue (verified
+2026-09-17: 200s in <0.25s from a real host, per the acquisition handoff
+doc). Run it from an environment with real network access, then hand back
+data/manifests/*.json plus data/raw/ (gitignored, do not commit) so this
+repo's v2 study can run against real filings.
 
 Deliberately does NOT score filing text at acquisition time (no lexicon,
 no LM dictionary call here) -- acquisition only fetches and freezes raw
@@ -27,13 +30,16 @@ Reuses acquire_edgar_8k_yf_megacap_daily.py's already-tested SEC/yfinance
 plumbing (submission fetch, filing filter, price download/validation,
 hashing) via direct import rather than duplicating it.
 
-IMPORTANT -- CIK VERIFICATION: AAPL/MSFT/AMZN's CIKs below match this
-repo's already-frozen v1 acquisition exactly. The other 9 issuers' CIKs
-were NOT independently verified against a live SEC source in the session
-that wrote this script (network to SEC was blocked there too) -- verify
-each against https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany
-or data.sec.gov/submissions/CIK##########.json (confirm the returned
-``name``/``tickers`` match) BEFORE running this script for real.
+CIK VERIFICATION (resolved 2026-09-17): AAPL/MSFT/AMZN's CIKs below match
+this repo's already-frozen v1 acquisition exactly. The other 9 issuers'
+CIKs were unverified when this script was first written (no network in
+that session) and have since been independently verified live against
+data.sec.gov/submissions/CIK##########.json, keyed on the response's
+``name`` field. All 12 are correct. Note: XOM's ``tickers`` array is empty
+on that endpoint (a known SEC data quirk for some large/older filers) even
+though its ``name`` field correctly returns "EXXON MOBIL CORP" -- verify
+future CIKs by ``name``, not ``tickers``, since the latter can be a false
+negative.
 """
 
 from __future__ import annotations
@@ -54,7 +60,6 @@ if str(ROOT / "scripts") not in sys.path:
     sys.path.insert(0, str(ROOT / "scripts"))
 
 from acquire_edgar_8k_yf_megacap_daily import (  # noqa: E402
-    SEC_USER_AGENT,
     canonical_dataset_hash,
     download_prices,
     fetch_company_filings,
@@ -66,6 +71,8 @@ from acquire_edgar_8k_yf_megacap_daily import (  # noqa: E402
 )
 
 from quant_sentiment.edgar_text import html_to_plain_text  # noqa: E402
+from quant_sentiment.sec_http import SEC_USER_AGENT  # noqa: E402
+from quant_sentiment.sec_http import sec_get_text as _sec_get_text  # noqa: E402
 
 FILINGS_DATASET_ID = "sec_filings_12issuer_2015_2025_v1"
 PRICES_DATASET_ID = "yf_sentiment_equities_daily_2015_2025_v1"
@@ -154,8 +161,6 @@ def acquire_symbol_filings_raw(
             if text_path.exists():
                 plain = text_path.read_text(encoding="utf-8")
             else:
-                from acquire_edgar_8k_yf_megacap_daily import _sec_get_text
-
                 html = _sec_get_text(url)
                 plain = html_to_plain_text(html, max_chars=TEXT_MAX_CHARS)
                 text_path.write_text(plain, encoding="utf-8")
@@ -320,6 +325,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--start", default=REQUESTED_START)
     parser.add_argument("--end", default=REQUESTED_END_EXCLUSIVE)
     parser.add_argument("--no-freeze", action="store_true")
+    parser.add_argument(
+        "--allow-partial",
+        action="store_true",
+        help="Freeze even if some filings failed to acquire (status becomes "
+        "'DATA FROZEN (PARTIAL: N failed)'). Without this flag, any filing "
+        "failure refuses the freeze -- failures are always visible per-row "
+        "in the index CSV regardless of this flag.",
+    )
     parser.add_argument("--max-filings-per-symbol", type=int, default=None)
     parser.add_argument("--raw-dir", type=Path, default=None)
     args = parser.parse_args(argv)
@@ -380,12 +393,25 @@ def main(argv: list[str] | None = None) -> int:
             f"ok={payload['stats']['filings_ok']} failed={payload['stats']['filings_failed']}"
         )
 
+    total_filings_failed = sum(s["filings_failed"] for s in filing_stats.values())
     if args.no_freeze:
         filings_status = "VALIDATED"
         filings_freeze_ts = None
         filings_sha256 = None
+    elif total_filings_failed and not args.allow_partial:
+        print(
+            f"ERROR: refusing to freeze with {total_filings_failed} filing failure(s) "
+            "(see FAILED rows in each symbol's index CSV); pass --allow-partial to "
+            "freeze anyway",
+            file=sys.stderr,
+        )
+        return 2
     else:
-        filings_status = "DATA FROZEN"
+        filings_status = (
+            "DATA FROZEN"
+            if not total_filings_failed
+            else f"DATA FROZEN (PARTIAL: {total_filings_failed} failed)"
+        )
         filings_freeze_ts = _utc_now()
         file_hashes = {name: sha256_file(path) for name, path in sorted(filing_file_paths.items())}
         filings_sha256 = {**file_hashes, "dataset_canonical": canonical_dataset_hash(file_hashes)}
