@@ -55,3 +55,68 @@ YAML status set to `frozen-for-holdout` after formation+validation. Tracker
 **FINAL CONFIGURATION FROZEN — Sentiment D9-D** recorded on Issue #3. Holdout
 experiment `sentiment_hist_text_v1_holdout_2025` executed once under frozen config.
 No retune after freeze.
+
+## Post-execution code defects found (2026-09-17) — two, partial, scoped corrections
+
+An independent code audit (commissioned by this program, empirically verified against
+the actual committed artifacts and code, not accepted on description alone) found two
+real defects in the code that produced the three already-committed result artifacts
+(`sentiment_hist_text_v1_{dev_formation,val_2024,holdout_2025}.json`), including the
+already-executed 2025 holdout. **Both defects are fixed in the source going forward.
+Neither has been used to regenerate the already-committed artifacts** — no local raw
+data exists to re-run this study in this environment (in addition to the deeper
+question, below, of whether re-running is even appropriate once 2025 has already been
+observed once).
+
+1. **Pre-freeze holdout-year leak via an unscoped summary field.** `key_metrics` in
+   `run_period_ablation` (`src/quant_sentiment/historical_text_study.py`) computed
+   every field correctly against the period-sliced `formation_frame`/`eval_frame`
+   *except* `n_sentiment_events_in_frame`, which summed
+   `full_frame["sentiment_event_count_5d"]` — the entire unsliced 2015–2025 series —
+   regardless of which period's artifact was being written. Confirmed directly: this
+   field reads `344` identically in all three artifacts (`dev_formation`, `val_2024`,
+   `holdout_2025`), while the correctly-scoped `n_eval_rows` field on the same three
+   artifacts correctly varies (`2264`, `252`, `249`). This means the `dev_formation`
+   and `val_2024` artifacts — both generated *before* the holdout freeze, per the
+   runner's own structural holdout-refusal gate — already carried a number with 2025
+   filings baked into it, a genuine (if narrow) violation of "no 2025 access before
+   freeze." **Scope:** this field is pure reporting metadata; it is never read by any
+   model-fitting, model-selection, or metric-computation code path, so none of the
+   headline accuracy/log-loss/Brier/ROC-AUC numbers in any of the three artifacts are
+   affected. Fixed by scoping the field to `eval_frame` and renaming it
+   `n_sentiment_events_in_eval` so its contract is unambiguous.
+2. **Walk-forward embargo/gap formula off by one at the frozen config's own
+   (label_horizon=1, embargo=0) values.** `build_walk_forward_plan`
+   (`src/quant_sentiment/validation.py`) computed
+   `gap = max(label_horizon - 1, 0) + embargo`, which is `0` at these exact values —
+   the values the frozen config actually uses (`walk_forward_gap: 0` in every
+   committed artifact). At gap=0, the last training row's own forward-looking label
+   and the first evaluation row's own feature reduce to the algebraically identical
+   expression `close[t+1]/close[t] - 1` for the same `t` — confirmed numerically, not
+   just by index arithmetic. The repo's own `labels_are_non_overlapping` self-check
+   (`>= label_horizon`) did not catch this, since `1 >= 1` is `True` even though an
+   exact overlap exists; the existing test suite only ever exercised
+   `(label_horizon=2, embargo=1)`, which happens to satisfy the correct bound by
+   coincidence of its own chosen embargo. **Scope/materiality:** because the labels
+   here are two-endpoint ratios (not cumulative/path-dependent), the leak is a single
+   shared price bar at each of the 109 walk-forward fold boundaries used to select the
+   locked `C` hyperparameter — not a multi-day overlapping window, and it recurs
+   identically and symmetrically across all three tested `C` values at every fold, so
+   it should not have differentially favored any one `C`. It is not expected to
+   materially bias the already-reported accuracy/log-loss/Brier/ROC-AUC numbers, but
+   it is a genuine, reproducible violation of the documented "gap prevents overlapping
+   forward labels from leaking across splits" contract (`research/model-risk.md`,
+   `research/sentiment-incremental-predictive-value.md`) at exactly the values this
+   study actually froze and ran under. Fixed to `gap = label_horizon + embargo`, and
+   the self-check tightened from `>=` to strict `>` to match its own name and close
+   the same class of off-by-one for any future (label_horizon, embargo) combination.
+
+**The open question this program cannot resolve unilaterally:** this study's 2025
+holdout has already been observed once, under code carrying both defects above.
+Re-running it under the corrected code — even though defect 2 could in principle
+shift which fold-level rows enter each `C`-selection split, and therefore in
+principle the selected `C` and the fitted model — would mean observing 2025 a second
+time, which is exactly what this program's one-time-holdout discipline exists to
+prevent. This is the same category of dilemma already on record for D9-C
+(`options-volatility-risk-lab`)'s VaR fix. Left here for independent/owner review to
+resolve, not decided by this fix.

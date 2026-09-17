@@ -34,7 +34,7 @@ def build_walk_forward_plan(
     if label_horizon <= 0 or embargo < 0:
         raise ValueError("label_horizon must be positive and embargo must be non-negative.")
 
-    gap = max(label_horizon - 1, 0) + embargo
+    gap = label_horizon + embargo
     development_observations = n_samples - test_size - gap
     if development_observations <= initial_train_size + validation_size:
         raise ValueError("Not enough observations for validation folds and a final test window.")
@@ -72,4 +72,14 @@ def build_walk_forward_plan(
 
 
 def labels_are_non_overlapping(split: WalkForwardSplit, label_horizon: int) -> bool:
-    return bool(split.evaluation_indices[0] - split.train_indices[-1] >= label_horizon)
+    """True iff no training row's forward-looking label shares a value with
+    any evaluation row's own feature. A training row's label at index i is a
+    function of prices through i + label_horizon; an evaluation row's own
+    feature at index j is (for these labels/features) numerically identical
+    to a training label at index j - label_horizon. Requiring a STRICT gap
+    greater than label_horizon (not >=) is what actually rules that out --
+    at exactly label_horizon, index j = train_indices[-1] + label_horizon
+    falls right at the boundary and reproduces the identity. See
+    tests/test_validation.py for a worked, non-overlapping-at-the-boundary
+    regression case."""
+    return bool(split.evaluation_indices[0] - split.train_indices[-1] > label_horizon)

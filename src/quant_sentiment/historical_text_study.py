@@ -211,7 +211,7 @@ def run_period_ablation(
     # set test_size to a minimal positive value that still fits.
     n_form = formation_frame.shape[0]
     test_size = int(wf.get("formation_internal_test_size", 20))
-    gap_pad = max(label_horizon - 1, 0) + embargo
+    gap_pad = label_horizon + embargo  # must match build_walk_forward_plan's own gap formula
     min_needed = initial_train_size + validation_size + test_size + gap_pad
     if not (n_form > min_needed):
         test_size = max(5, n_form // 10)
@@ -279,8 +279,8 @@ def run_period_ablation(
     key_metrics = {
         "n_formation_rows": int(formation_frame.shape[0]),
         "n_eval_rows": int(eval_frame.shape[0]),
-        "n_sentiment_events_in_frame": int(
-            (full_frame["sentiment_event_count_5d"].fillna(0) > 0).sum()
+        "n_sentiment_events_in_eval": int(
+            (eval_frame["sentiment_event_count_5d"].fillna(0) > 0).sum()
         ),
         "eval_start_session": str(eval_frame["session"].iloc[0]),
         "eval_end_session": str(eval_frame["session"].iloc[-1]),
