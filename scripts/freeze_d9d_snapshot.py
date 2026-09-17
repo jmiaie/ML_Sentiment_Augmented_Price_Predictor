@@ -97,6 +97,21 @@ def verify_filings(manifest: dict[str, Any], dataset_dir: Path) -> dict[str, Any
             f"truncation_count is {parameters['truncation_count']}, expected 0 -- "
             "the corpus is not uncapped, do not freeze it"
         )
+    if (
+        parameters.get("extraction_policy") != "uncapped"
+        or parameters.get("text_max_chars") is not None
+    ):
+        raise FreezeRefused(
+            f"extraction_policy is {parameters.get('extraction_policy')!r} with text_max_chars "
+            f"{parameters.get('text_max_chars')!r}, expected 'uncapped' and null -- the corpus "
+            "is not uncapped, do not freeze it"
+        )
+    if int(parameters.get("text_files_at_legacy_cap_200000", 0)) != 0:
+        raise FreezeRefused(
+            f"text_files_at_legacy_cap_200000 is "
+            f"{parameters['text_files_at_legacy_cap_200000']}, expected 0 -- the corpus is not "
+            "uncapped, do not freeze it"
+        )
 
     listings = dataset_dir / "filings"
     index_rows = 0

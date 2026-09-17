@@ -154,7 +154,13 @@ def _build_tree(
                 "status": "VALIDATED",
                 "freeze_timestamp_utc": None,
                 "sha256": {**file_hashes, "dataset_canonical": canonical_dataset_hash(file_hashes)},
-                "parameters": {"text_n_files": n_rows, "truncation_count": truncation_count},
+                "parameters": {
+                    "text_n_files": n_rows,
+                    "truncation_count": truncation_count,
+                    "extraction_policy": "uncapped",
+                    "text_max_chars": None,
+                    "text_files_at_legacy_cap_200000": 0,
+                },
             },
             indent=2,
             sort_keys=False,
@@ -325,3 +331,27 @@ def test_refuses_when_the_issuer_count_is_wrong(freezer: ModuleType, tmp_path: P
     )
     with pytest.raises(freezer.FreezeRefused, match="issuers"):
         freezer.freeze(tmp_path)
+
+
+@pytest.mark.parametrize(
+    ("key", "value"),
+    [
+        ("extraction_policy", "capped_at_200000"),
+        ("text_max_chars", 200_000),
+        ("text_files_at_legacy_cap_200000", 3),
+    ],
+)
+def test_refuses_a_corpus_that_is_not_uncapped(
+    freezer: ModuleType, tmp_path: Path, key: str, value: Any
+) -> None:
+    """The freeze's whole claim is that the frozen text is the UNtruncated text,
+    so a manifest that no longer declares uncapped extraction must not freeze."""
+    tree = _build_tree(tmp_path)
+    manifest = _manifest(tree, "filings_manifest")
+    manifest["parameters"][key] = value
+    Path(tree["filings_manifest"]).write_text(
+        json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
+    )
+    with pytest.raises(freezer.FreezeRefused, match="uncapped"):
+        freezer.freeze(tmp_path)
+    assert _manifest(tree, "filings_manifest")["status"] == "VALIDATED"
