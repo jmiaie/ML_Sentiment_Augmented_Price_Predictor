@@ -2626,7 +2626,7 @@
   "point_in_time_field": "acceptance_datetime (EDGAR acceptanceDateTime) -- the public availability/acceptance timestamp is used as the information timestamp, never filing_date/reportDate alone.",
   "limitations": [
     "Static present-day-selected 12-issuer universe: survivorship/selection bias.",
-    "Primary document text truncated at 200k chars.",
+    "Primary document text is extracted uncapped -- text_max_chars is null, extraction_policy is \"uncapped\" and truncation_count is 0, so no filing text is truncated.",
     "No sentiment/text scoring performed at acquisition time -- raw text and metadata only; features are computed downstream from these frozen inputs."
   ],
   "notes": "Acquired via a network-capable handoff environment (this session's own egress proxy blocks data.sec.gov/www.sec.gov). Raw filing text under data/raw/ is gitignored, never committed to this public repository."

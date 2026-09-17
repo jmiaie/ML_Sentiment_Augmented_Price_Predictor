@@ -10,18 +10,24 @@ Examples:
   python scripts/run_historical_text_study_v2.py
 
   # 2025 HISTORICAL EVALUATION -- only with a frozen config + frozen corpus.
-  python scripts/run_historical_text_study_v2.py \\
+  python scripts/run_historical_text_study_v2.py \\\\
       --periods historical_evaluation --allow-2025
+
+  # PRE-2025 only: select the final C on the 2024 validation window and print
+  # the block to paste into walk_forward.final_selected_c. Runs no period study.
+  python scripts/run_historical_text_study_v2.py --select-final-c
 
 Fail-closed gates (each exits 2):
   * asking for historical_evaluation without --allow-2025
   * --allow-2025 while config status is not ``frozen-final``
-  * --allow-2025 while ``walk_forward.final_selected_c`` is unpopulated
-  * --allow-2025 while the filings manifest is not ``DATA FROZEN``
-  * any run whose filings manifest status is something else (a
+  * --allow-2025 while ``walk_forward.final_selected_c`` lacks a complete
+    pre-2025-selected C for either target
+  * --select-final-c combined with --allow-2025 (selection is PRE-2025 only)
+  * ANY run -- 2025 or not -- while EITHER manifest (filings or prices) is not
+    exactly ``DATA FROZEN``, or is missing its canonical dataset hash (a
     ``DATA FROZEN (PARTIAL: N failed)`` label never passes)
-C is never re-selected on the 2025 window: the frozen ``final_selected_c``
-values are handed to the engine as ``fixed_c``.
+C is never re-selected on the 2025 window: the frozen PER-TARGET
+``final_selected_c`` values are handed to the engine as ``fixed_c``.
 """
 
 from __future__ import annotations
@@ -41,12 +47,15 @@ import yaml
 
 from quant_sentiment.event_frame_v2 import FilingEvent, build_event_frame
 from quant_sentiment.historical_text_study_v2 import (
+    FINAL_C_SELECTION_MAX_SESSION,
+    MODEL_SPECS,
     PRIMARY_EMBARGO_SESSIONS,
     PRIMARY_TARGET_COLUMN,
     SECONDARY_EMBARGO_SESSIONS,
     SECONDARY_TARGET_COLUMN,
     PeriodSpec,
     run_period_study,
+    select_final_c_on_validation,
     write_json_artifact,
 )
 from quant_sentiment.lm_dictionary import LM_DATASET_ID
@@ -54,7 +63,6 @@ from quant_sentiment.nyse_calendar import NyseCalendar
 
 FROZEN_CONFIG_STATUS = "frozen-final"
 HOLDOUT_PERIOD_NAME = "historical_evaluation"
-ACCEPTED_MANIFEST_STATUSES = ("VALIDATED", "DATA FROZEN")
 FROZEN_MANIFEST_STATUS = "DATA FROZEN"
 PRE_2025_PERIODS = ("formation_dev", "validation")
 ALL_PERIODS = (*PRE_2025_PERIODS, HOLDOUT_PERIOD_NAME)
@@ -86,7 +94,30 @@ def _git_head(root: Path) -> str | None:
 
 
 def _load_manifest(path: Path) -> dict[str, Any]:
-    return json.loads(path.read_text(encoding="utf-8"))
+    manifest: dict[str, Any] = json.loads(path.read_text(encoding="utf-8"))
+    return manifest
+
+
+def _frozen_c_for_target(
+    experiment: dict[str, Any], target_name: str
+) -> dict[str, float | None] | None:
+    """The frozen, pre-2025-selected C for one target; None if not selected yet.
+
+    ``walk_forward.final_selected_c`` holds one dictionary per target, because
+    the primary (1-session) and secondary (5-session) targets have different
+    horizons and embargoes and are selected independently. A target is only
+    usable once every logistic model has a value; model 0 is the majority
+    baseline and has no C.
+    """
+    table = experiment.get("walk_forward", {}).get("final_selected_c")
+    if not isinstance(table, dict):
+        return None
+    entry = table.get(target_name)
+    if not isinstance(entry, dict) or any(model not in entry for model in MODEL_SPECS):
+        return None
+    if any(entry[model] is None for model in MODEL_SPECS if MODEL_SPECS[model]):
+        return None
+    return {model: (None if value is None else float(value)) for model, value in entry.items()}
 
 
 def _load_events(filings_dir: Path, symbols: list[str]) -> tuple[list[FilingEvent], dict[str, int]]:
@@ -171,6 +202,15 @@ def main(argv: list[str] | None = None) -> int:
         help=f"comma-separated subset of {ALL_PERIODS}",
     )
     parser.add_argument("--allow-2025", action="store_true")
+    parser.add_argument(
+        "--select-final-c",
+        action="store_true",
+        help=(
+            "run the PRE-2025 final-C selection (purged formation train -> 2024 "
+            "validation) and write the selection report; runs no period study and "
+            "never reads 2025"
+        ),
+    )
     args = parser.parse_args(argv)
 
     root = _repo_root()
@@ -204,15 +244,26 @@ def main(argv: list[str] | None = None) -> int:
             file=sys.stderr,
         )
         return 2
-    frozen_c = experiment.get("walk_forward", {}).get("final_selected_c")
-    if args.allow_2025 and not frozen_c:
+    if args.select_final_c and args.allow_2025:
         print(
-            "ERROR: --allow-2025 requires walk_forward.final_selected_c to be "
-            "populated (pre-2025-selected C). Without it the 2025 run would "
-            "re-select C on its own window, which no_retune_after_freeze forbids.",
+            "ERROR: --select-final-c is a PRE-2025 operation and cannot be combined "
+            "with --allow-2025.",
             file=sys.stderr,
         )
         return 2
+    if args.allow_2025:
+        unselected = [
+            name for name, _, _ in TARGETS if _frozen_c_for_target(experiment, name) is None
+        ]
+        if unselected:
+            print(
+                "ERROR: --allow-2025 requires walk_forward.final_selected_c to hold a "
+                "complete pre-2025-selected C for every target; missing or incomplete "
+                f"for {unselected}. Without it the 2025 run would re-select C on its "
+                "own window, which no_retune_after_freeze forbids.",
+                file=sys.stderr,
+            )
+            return 2
 
     raw_dir = args.raw_dir or (root / "data" / "raw")
     manifests_dir = raw_dir.parent / "manifests"
@@ -226,21 +277,32 @@ def main(argv: list[str] | None = None) -> int:
     filings_manifest = _load_manifest(filings_manifest_path)
     prices_manifest = _load_manifest(prices_manifest_path)
     filings_status = str(filings_manifest.get("status", ""))
-    if filings_status not in ACCEPTED_MANIFEST_STATUSES:
-        print(
-            f"ERROR: filings manifest status {filings_status!r} is not one of "
-            f"{ACCEPTED_MANIFEST_STATUSES} (a PARTIAL freeze is never usable)",
-            file=sys.stderr,
-        )
-        return 2
-    if args.allow_2025 and filings_status != FROZEN_MANIFEST_STATUS:
-        print(
-            f"ERROR: --allow-2025 requires the filings corpus to be "
-            f"{FROZEN_MANIFEST_STATUS!r} (got {filings_status!r}). Freeze the "
-            "uncapped corpus before the 2025 HISTORICAL EVALUATION.",
-            file=sys.stderr,
-        )
-        return 2
+    prices_status = str(prices_manifest.get("status", ""))
+
+    # Every real run reads a frozen corpus -- not only the 2025 HISTORICAL
+    # EVALUATION. Both datasets are gated: a DATA FROZEN filings manifest over a
+    # VALIDATED prices manifest is a half-frozen corpus, and the price series
+    # feed every feature and every target.
+    for label, current_status, manifest in (
+        ("filings", filings_status, filings_manifest),
+        ("prices", prices_status, prices_manifest),
+    ):
+        if current_status != FROZEN_MANIFEST_STATUS:
+            print(
+                f"ERROR: {label} manifest status {current_status!r} is not "
+                f"{FROZEN_MANIFEST_STATUS!r}. Every real empirical run requires BOTH "
+                "datasets DATA FROZEN (VALIDATED and 'DATA FROZEN (PARTIAL: n failed)' "
+                "are both refused).",
+                file=sys.stderr,
+            )
+            return 2
+        if not (manifest.get("sha256") or {}).get("dataset_canonical"):
+            print(
+                f"ERROR: {label} manifest has no sha256.dataset_canonical; a frozen "
+                "snapshot must carry its canonical dataset hash.",
+                file=sys.stderr,
+            )
+            return 2
 
     periods_cfg = experiment["periods"]
     period_specs = {
@@ -277,11 +339,16 @@ def main(argv: list[str] | None = None) -> int:
         "n_issuers_in_frame": int(frame["ticker"].nunique()) if not frame.empty else 0,
         "counts_by_form": {str(k): int(v) for k, v in counts_by_form.items()},
         "skip_counts": skip_counts,
+        "filings_dataset_id": dataset_ids.get("filings"),
         "filings_manifest_status": filings_status,
         "filings_dataset_canonical_sha256": (filings_manifest.get("sha256") or {}).get(
             "dataset_canonical"
         ),
-        "prices_manifest_status": str(prices_manifest.get("status", "")),
+        "prices_dataset_id": dataset_ids.get("prices"),
+        "prices_manifest_status": prices_status,
+        "prices_dataset_canonical_sha256": (prices_manifest.get("sha256") or {}).get(
+            "dataset_canonical"
+        ),
         "dictionary_dataset_id_config": dataset_ids.get("dictionary"),
         "dictionary_dataset_id_runtime": LM_DATASET_ID,
         "dictionary_dataset_id_matches": dataset_ids.get("dictionary") == LM_DATASET_ID,
@@ -307,12 +374,55 @@ def main(argv: list[str] | None = None) -> int:
     )
     git_head = _git_head(root)
 
-    fixed_c: dict[str, float | None] | None = None
-    if args.allow_2025:
-        fixed_c = {
-            str(model): (None if value is None else float(value))
-            for model, value in dict(frozen_c).items()
+    if args.select_final_c:
+        selection_targets: dict[str, Any] = {}
+        for target_name, target_column, embargo_sessions in TARGETS:
+            selection_targets[target_name] = select_final_c_on_validation(
+                frame,
+                formation=formation,
+                validation=period_specs["validation"],
+                target_column=target_column,
+                embargo_sessions=embargo_sessions,
+                initial_train_size=int(walk_forward["initial_train_size"]),
+                validation_size=int(walk_forward["validation_size"]),
+                step_size=int(walk_forward["step_size"]),
+                formation_internal_test_size=int(walk_forward["formation_internal_test_size"]),
+            )
+        selection_artifact: dict[str, Any] = {
+            "experiment_id": experiment_id,
+            "dataset_ids": dataset_ids,
+            "config_path": rel_config,
+            "config_status": status,
+            "config_sha256": hashlib.sha256(config_text.encode("utf-8")).hexdigest(),
+            "branch": args.branch,
+            "code_git_head": git_head,
+            "corpus": corpus,
+            "selection_max_session": FINAL_C_SELECTION_MAX_SESSION,
+            "targets": selection_targets,
+            "notes": (
+                "PRE-2025 final-C selection only. This mode produces no DEV, no 2024 "
+                "and no 2025 evaluation numbers; it exists so the reviewed selection "
+                "can be pasted into walk_forward.final_selected_c."
+            ),
         }
+        selection_path = results_dir / f"{experiment_id}_final_c_selection.json"
+        selection_digest = write_json_artifact(selection_path, selection_artifact)
+        print(f"wrote {selection_path} sha256={selection_digest[:16]}")
+        print("walk_forward.final_selected_c:")
+        print(
+            yaml.safe_dump(
+                {name: entry["selected_c"] for name, entry in selection_targets.items()},
+                sort_keys=False,
+            )
+        )
+        return 0
+
+    # Per-target: the two targets have different horizons and embargoes, so their
+    # C was selected independently. One shared dictionary would silently apply the
+    # primary target's selection to the secondary target.
+    fixed_c_by_target: dict[str, dict[str, float | None]] = {
+        name: _frozen_c_for_target(experiment, name) or {} for name, _, _ in TARGETS
+    }
 
     for target_name, target_column, embargo_sessions in TARGETS:
         for period_name in periods_requested:
@@ -326,7 +436,7 @@ def main(argv: list[str] | None = None) -> int:
                 target_column=target_column,
                 embargo_sessions=embargo_sessions,
                 allow_holdout=args.allow_2025,
-                fixed_c=fixed_c,
+                fixed_c=fixed_c_by_target[target_name] if args.allow_2025 else None,
                 initial_train_size=int(walk_forward["initial_train_size"]),
                 validation_size=int(walk_forward["validation_size"]),
                 formation_internal_test_size=int(walk_forward["formation_internal_test_size"]),

@@ -6,15 +6,19 @@ text files on disk, real manifests -- so the 2025 gates and the C-fixing path
 are proven through the same code path the data takes, not by re-asserting the
 gate formula in isolation.
 
-Covered (change E):
+Covered (change E, extended by the D9-D review's corrections):
   * DEV + 2024 validation write artifacts and a ledger, and never 2025
   * 2025 refused without --allow-2025
   * 2025 refused while config status is not frozen-final
-  * 2025 refused while walk_forward.final_selected_c is unpopulated
-  * 2025 refused while the corpus is not DATA FROZEN
+  * 2025 refused unless BOTH targets have a complete pre-2025-selected C
+    (correction 3: final_selected_c is per target, not one shared dictionary)
+  * ANY run, 2025 or not, refused while EITHER manifest is not exactly
+    DATA FROZEN, or is missing sha256.dataset_canonical (correction 2)
   * a "DATA FROZEN (PARTIAL: ...)" corpus is refused for every run
-  * with all gates satisfied, 2025 runs ONCE and uses the frozen C verbatim
-    (c_selection == "fixed_from_frozen_config"), never re-selecting on 2025
+  * with all gates satisfied, 2025 runs ONCE and uses the frozen per-target C
+    verbatim (c_selection == "fixed_from_frozen_config"), never re-selecting
+  * --select-final-c writes only the selection report, never a study artifact,
+    and never reaches 2025
 """
 
 from __future__ import annotations
@@ -65,6 +69,36 @@ FROZEN_C = {
     "model1_market_only": 0.1,
     "model2_text_only": 1.0,
     "model3_market_text_combined": 10.0,
+}
+# Distinct values per target: a target mix-up (the secondary target silently
+# receiving the primary target's C) fails loudly instead of passing quietly.
+FROZEN_C_SECONDARY = {
+    "model0_majority_baseline": None,
+    "model1_market_only": 1.0,
+    "model2_text_only": 0.01,
+    "model3_market_text_combined": 0.1,
+}
+FROZEN_C_BY_TARGET: dict[str, dict[str, float | None]] = {
+    "primary": FROZEN_C,
+    "secondary": FROZEN_C_SECONDARY,
+}
+# Shapes the 2025 gate must reject: a target that was never selected (all null)
+# and one that is only half selected.
+_MALFORMED_FINAL_C: dict[str, dict[str, Any]] = {
+    # The pre-selection schema the config ships with.
+    "both_targets_literal_null": {"primary": None, "secondary": None},
+    "primary_target_never_selected": {
+        **FROZEN_C_BY_TARGET,
+        "primary": None,
+    },
+    "primary_target_half_selected": {
+        **FROZEN_C_BY_TARGET,
+        "primary": {"model0_majority_baseline": None, "model1_market_only": 0.1},
+    },
+    "secondary_target_never_selected": {
+        **FROZEN_C_BY_TARGET,
+        "secondary": None,
+    },
 }
 
 
@@ -159,9 +193,12 @@ def _build_fixture(
     sessions: pd.DatetimeIndex,
     calendar: NyseCalendar,
     *,
-    filings_status: str = "VALIDATED",
+    filings_status: str = "DATA FROZEN",
+    prices_status: str = "DATA FROZEN",
+    filings_canonical: str | None = "a" * 64,
+    prices_canonical: str | None = "b" * 64,
     config_status: str = "pre-registered",
-    final_c: dict[str, float | None] | None = None,
+    final_c: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     raw = tmp_path / "data" / "raw"
     filings_ds = raw / FILINGS_DS
@@ -183,7 +220,9 @@ def _build_fixture(
             {
                 "dataset_id": FILINGS_DS,
                 "status": filings_status,
-                "sha256": {"dataset_canonical": "a" * 64},
+                "sha256": (
+                    {} if filings_canonical is None else {"dataset_canonical": filings_canonical}
+                ),
                 "freeze_timestamp_utc": None,
             }
         ),
@@ -193,8 +232,10 @@ def _build_fixture(
         json.dumps(
             {
                 "dataset_id": PRICES_DS,
-                "status": "VALIDATED",
-                "sha256": {"dataset_canonical": "b" * 64},
+                "status": prices_status,
+                "sha256": (
+                    {} if prices_canonical is None else {"dataset_canonical": prices_canonical}
+                ),
                 "freeze_timestamp_utc": None,
             }
         ),
@@ -281,7 +322,12 @@ def test_dev_and_validation_run_writes_artifacts_and_never_2025(
     assert key_metrics["embargo_sessions"] == 1
     assert "headline_delta_log_loss_model3_minus_model1" in key_metrics
     assert payload["config_status"] == "pre-registered"
-    assert payload["corpus"]["filings_manifest_status"] == "VALIDATED"
+    assert payload["corpus"]["filings_dataset_id"] == FILINGS_DS
+    assert payload["corpus"]["prices_dataset_id"] == PRICES_DS
+    assert payload["corpus"]["filings_manifest_status"] == "DATA FROZEN"
+    assert payload["corpus"]["prices_manifest_status"] == "DATA FROZEN"
+    assert payload["corpus"]["filings_dataset_canonical_sha256"] == "a" * 64
+    assert payload["corpus"]["prices_dataset_canonical_sha256"] == "b" * 64
     assert payload["corpus"]["n_frame_rows"] > 0
     assert payload["corpus"]["n_index_rows_not_ok"] == {}
     assert payload["corpus"]["dictionary_dataset_id_matches"] is True
@@ -328,7 +374,114 @@ def test_2025_refused_without_final_selected_c(
     assert _artifacts(fixture) == []
 
 
+@pytest.mark.parametrize("manifest", ["filings", "prices"])
 def test_2025_refused_while_corpus_is_not_data_frozen(
+    runner: ModuleType,
+    tmp_path: Path,
+    sessions: pd.DatetimeIndex,
+    calendar: NyseCalendar,
+    manifest: str,
+) -> None:
+    fixture = _build_fixture(
+        tmp_path,
+        sessions,
+        calendar,
+        config_status="frozen-final",
+        final_c=FROZEN_C_BY_TARGET,
+        filings_status="VALIDATED" if manifest == "filings" else "DATA FROZEN",
+        prices_status="VALIDATED" if manifest == "prices" else "DATA FROZEN",
+    )
+    argv = _argv(fixture, "--periods", "historical_evaluation", "--allow-2025")
+    assert runner.main(argv) == 2
+    assert _artifacts(fixture) == []
+
+
+@pytest.mark.parametrize("manifest", ["filings", "prices"])
+def test_ordinary_run_refused_while_either_manifest_is_not_data_frozen(
+    runner: ModuleType,
+    tmp_path: Path,
+    sessions: pd.DatetimeIndex,
+    calendar: NyseCalendar,
+    manifest: str,
+) -> None:
+    """Correction 2: DEV/validation are gated too -- a frozen filings manifest
+    over a merely VALIDATED prices manifest is a half-frozen corpus, and prices
+    feed every feature and every target."""
+    fixture = _build_fixture(
+        tmp_path,
+        sessions,
+        calendar,
+        filings_status="VALIDATED" if manifest == "filings" else "DATA FROZEN",
+        prices_status="VALIDATED" if manifest == "prices" else "DATA FROZEN",
+    )
+    assert runner.main(_argv(fixture)) == 2
+    assert _artifacts(fixture) == []
+
+
+@pytest.mark.parametrize("manifest", ["filings", "prices"])
+def test_partial_freeze_corpus_is_refused_for_ordinary_runs(
+    runner: ModuleType,
+    tmp_path: Path,
+    sessions: pd.DatetimeIndex,
+    calendar: NyseCalendar,
+    manifest: str,
+) -> None:
+    fixture = _build_fixture(
+        tmp_path,
+        sessions,
+        calendar,
+        filings_status=(
+            "DATA FROZEN (PARTIAL: 3 failed)" if manifest == "filings" else "DATA FROZEN"
+        ),
+        prices_status=(
+            "DATA FROZEN (PARTIAL: 3 failed)" if manifest == "prices" else "DATA FROZEN"
+        ),
+    )
+    assert runner.main(_argv(fixture)) == 2
+    assert _artifacts(fixture) == []
+
+
+@pytest.mark.parametrize("manifest", ["filings", "prices"])
+def test_run_refused_when_a_manifest_lacks_its_canonical_dataset_hash(
+    runner: ModuleType,
+    tmp_path: Path,
+    sessions: pd.DatetimeIndex,
+    calendar: NyseCalendar,
+    manifest: str,
+) -> None:
+    """A DATA FROZEN label without a canonical hash is an unverifiable snapshot."""
+    fixture = _build_fixture(
+        tmp_path,
+        sessions,
+        calendar,
+        filings_canonical=None if manifest == "filings" else "a" * 64,
+        prices_canonical=None if manifest == "prices" else "b" * 64,
+    )
+    assert runner.main(_argv(fixture)) == 2
+    assert _artifacts(fixture) == []
+
+
+@pytest.mark.parametrize("label", sorted(_MALFORMED_FINAL_C))
+def test_2025_refused_unless_both_targets_have_a_complete_frozen_c(
+    runner: ModuleType,
+    tmp_path: Path,
+    sessions: pd.DatetimeIndex,
+    calendar: NyseCalendar,
+    label: str,
+) -> None:
+    fixture = _build_fixture(
+        tmp_path,
+        sessions,
+        calendar,
+        config_status="frozen-final",
+        final_c=_MALFORMED_FINAL_C[label],
+    )
+    argv = _argv(fixture, "--periods", "historical_evaluation", "--allow-2025")
+    assert runner.main(argv) == 2
+    assert _artifacts(fixture) == []
+
+
+def test_select_final_c_cannot_be_combined_with_allow_2025(
     runner: ModuleType, tmp_path: Path, sessions: pd.DatetimeIndex, calendar: NyseCalendar
 ) -> None:
     fixture = _build_fixture(
@@ -336,22 +489,54 @@ def test_2025_refused_while_corpus_is_not_data_frozen(
         sessions,
         calendar,
         config_status="frozen-final",
-        final_c=FROZEN_C,
-        filings_status="VALIDATED",
+        final_c=FROZEN_C_BY_TARGET,
     )
-    argv = _argv(fixture, "--periods", "historical_evaluation", "--allow-2025")
+    argv = _argv(
+        fixture, "--select-final-c", "--allow-2025", "--periods", "historical_evaluation"
+    )
     assert runner.main(argv) == 2
     assert _artifacts(fixture) == []
 
 
-def test_partial_freeze_corpus_is_refused_for_ordinary_runs(
+def test_select_final_c_writes_only_the_selection_report_and_never_2025(
     runner: ModuleType, tmp_path: Path, sessions: pd.DatetimeIndex, calendar: NyseCalendar
 ) -> None:
-    fixture = _build_fixture(
-        tmp_path, sessions, calendar, filings_status="DATA FROZEN (PARTIAL: 3 failed)"
+    """The selection mode exists so the reviewed 2024-only selection can be
+    pasted into walk_forward.final_selected_c. It runs no period study, writes
+    no ledger row, and rewrites neither manifest."""
+    fixture = _build_fixture(tmp_path, sessions, calendar)
+    manifests = sorted((fixture["raw"].parent / "manifests").glob("*.json"))
+    before = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in manifests}
+
+    assert runner.main(_argv(fixture, "--select-final-c")) == 0
+
+    assert _artifacts(fixture) == ["fx_text_study_final_c_selection.json"]
+    assert not fixture["ledger"].exists()
+
+    report = json.loads(
+        (fixture["results"] / "fx_text_study_final_c_selection.json").read_text()
     )
-    assert runner.main(_argv(fixture)) == 2
-    assert _artifacts(fixture) == []
+    assert report["selection_max_session"] == "2024-12-31"
+    assert set(report["targets"]) == {"primary", "secondary"}
+    for target in report["targets"].values():
+        assert target["validation_period"]["end_inclusive"] == "2024-12-31"
+        assert target["n_validation_rows"] > 0
+        assert target["n_formation_rows"] > 0
+        assert target["c_grid"] == [0.01, 0.1, 1.0, 10.0]
+        assert target["selected_c"]["model0_majority_baseline"] is None
+        for model, value in target["selected_c"].items():
+            if model == "model0_majority_baseline":
+                continue
+            assert value in (0.01, 0.1, 1.0, 10.0)
+            assert set(target["validation_log_loss_by_model_and_c"][model]) == {
+                "0.01",
+                "0.1",
+                "1.0",
+                "10.0",
+            }
+
+    after = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in manifests}
+    assert after == before  # selection reads the corpus, it never rewrites it
 
 
 def test_2025_runs_once_with_all_gates_satisfied_and_uses_the_frozen_c(
@@ -363,7 +548,7 @@ def test_2025_runs_once_with_all_gates_satisfied_and_uses_the_frozen_c(
         calendar,
         filings_status="DATA FROZEN",
         config_status="frozen-final",
-        final_c=FROZEN_C,
+        final_c=FROZEN_C_BY_TARGET,
     )
     argv = _argv(fixture, "--periods", "historical_evaluation", "--allow-2025")
     assert runner.main(argv) == 0
@@ -395,7 +580,7 @@ def test_pure_pre_2025_run_cannot_produce_2025_numbers(
         calendar,
         filings_status="DATA FROZEN",
         config_status="frozen-final",
-        final_c=FROZEN_C,
+        final_c=FROZEN_C_BY_TARGET,
     )
     assert runner.main(_argv(fixture, "--periods", "validation", "--allow-2025")) == 0
     assert _artifacts(fixture) == [

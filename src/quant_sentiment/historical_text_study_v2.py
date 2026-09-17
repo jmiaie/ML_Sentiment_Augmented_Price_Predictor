@@ -41,13 +41,20 @@ from .modeling import (
     _tune_logistic_model,
 )
 from .validation import WalkForwardSplit
-from .walk_forward_v2 import EventSplit, build_purged_event_walk_forward_plan
+from .walk_forward_v2 import (
+    EventSplit,
+    EventWalkForwardPlan,
+    build_purged_event_walk_forward_plan,
+)
 
 C_GRID = (0.01, 0.1, 1.0, 10.0)
 PRIMARY_TARGET_COLUMN = "primary_direction"
 SECONDARY_TARGET_COLUMN = "secondary_direction"
 PRIMARY_EMBARGO_SESSIONS = 1
 SECONDARY_EMBARGO_SESSIONS = 5
+# The 2024 validation window is the LAST window allowed to influence
+# regularization selection. 2025 is an evaluation window, never a selection one.
+FINAL_C_SELECTION_MAX_SESSION = "2024-12-31"
 
 MODEL_SPECS: dict[str, list[str]] = {
     "model0_majority_baseline": [],
@@ -88,6 +95,157 @@ def _as_validation_splits(splits: list[EventSplit]) -> list[WalkForwardSplit]:
         )
         for split in splits
     ]
+
+
+def _build_formation_plan(
+    formation_frame: pd.DataFrame,
+    *,
+    target_column: str,
+    initial_train_size: int,
+    validation_size: int,
+    step_size: int,
+    formation_internal_test_size: int,
+    embargo_sessions: int,
+) -> EventWalkForwardPlan:
+    """Purged event walk-forward plan over the formation window.
+
+    Shared by ``run_period_study`` (which tunes C on formation-internal folds)
+    and ``select_final_c_on_validation`` (which tunes C on the 2024 validation
+    window), so both see exactly the same purging/embargo geometry and a fix
+    here cannot silently apply to only one of them.
+    """
+    n_form = formation_frame.shape[0]
+    test_size = formation_internal_test_size
+    if n_form <= initial_train_size + validation_size + test_size:
+        test_size = max(5, n_form // 10)
+        if n_form <= initial_train_size + validation_size + test_size:
+            raise ValueError(
+                f"Formation too small for purged walk-forward "
+                f"(n={n_form}, need > {initial_train_size + validation_size + test_size})"
+            )
+
+    end_col = (
+        "primary_target_end_session_ordinal"
+        if target_column == PRIMARY_TARGET_COLUMN
+        else "secondary_target_end_session_ordinal"
+    )
+    return build_purged_event_walk_forward_plan(
+        formation_frame["effective_session_ordinal"],
+        formation_frame[end_col],
+        initial_train_size=initial_train_size,
+        validation_size=validation_size,
+        test_size=test_size,
+        step_size=step_size,
+        embargo_sessions=embargo_sessions,
+    )
+
+
+def select_final_c_on_validation(
+    full_frame: pd.DataFrame,
+    *,
+    formation: PeriodSpec,
+    validation: PeriodSpec,
+    target_column: str,
+    embargo_sessions: int,
+    initial_train_size: int,
+    validation_size: int,
+    step_size: int,
+    formation_internal_test_size: int,
+    c_values: tuple[float, ...] = C_GRID,
+) -> dict[str, Any]:
+    """Select the FINAL C on PRE-2025 evidence only.
+
+    Train on the purged formation rows, score every C in ``c_values`` on the
+    2024 validation window, and return the per-model argmin log-loss. This is
+    what DEV + 2024 exist for; the result is written into
+    ``walk_forward.final_selected_c`` and read verbatim by the 2025 run.
+
+    The 2025 window is an evaluation window, not a selection window, so a
+    validation period ending after ``FINAL_C_SELECTION_MAX_SESSION`` is
+    refused rather than silently consumed. Ties break toward the smaller
+    (more regularized) C.
+    """
+    if validation.end_inclusive > FINAL_C_SELECTION_MAX_SESSION:
+        raise RuntimeError(
+            "final-C selection may only consume a validation window ending on or "
+            f"before {FINAL_C_SELECTION_MAX_SESSION}; got one ending "
+            f"{validation.end_inclusive!r}. 2025 information must never reach "
+            "regularization selection."
+        )
+
+    formation_frame = slice_period(full_frame, formation).dropna(subset=[target_column])
+    formation_frame = formation_frame.reset_index(drop=True)
+    validation_frame = slice_period(full_frame, validation).dropna(subset=[target_column])
+    validation_frame = validation_frame.reset_index(drop=True)
+
+    if formation_frame.empty:
+        raise ValueError("Empty formation frame after dropna")
+    if validation_frame.empty:
+        raise ValueError(f"Empty validation frame for period {validation.name!r}")
+
+    plan = _build_formation_plan(
+        formation_frame,
+        target_column=target_column,
+        initial_train_size=initial_train_size,
+        validation_size=validation_size,
+        step_size=step_size,
+        formation_internal_test_size=formation_internal_test_size,
+        embargo_sessions=embargo_sessions,
+    )
+    pre_2025_train_frame = formation_frame.iloc[plan.pre_test_train_indices]
+    if pre_2025_train_frame.empty:
+        raise ValueError("Empty pre-2025 training frame after purging")
+
+    y_validation = validation_frame[target_column].astype(int).to_numpy()
+    selected_c: dict[str, float | None] = {}
+    log_loss_by_model_and_c: dict[str, dict[str, float]] = {}
+    for model_name, feature_columns in MODEL_SPECS.items():
+        if not feature_columns:
+            # Model 0 is the majority/unconditional baseline -- there is no C.
+            selected_c[model_name] = None
+            log_loss_by_model_and_c[model_name] = {}
+            continue
+        losses: dict[str, float] = {}
+        for c_value in c_values:
+            probabilities = _fit_probabilities(
+                train_frame=pre_2025_train_frame,
+                evaluation_frame=validation_frame,
+                feature_columns=feature_columns,
+                target_column=target_column,
+                c_value=c_value,
+            )
+            metrics = _classification_metrics(y_validation, probabilities)
+            losses[str(c_value)] = float(metrics["log_loss"])
+        log_loss_by_model_and_c[model_name] = losses
+        selected_c[model_name] = min(c_values, key=lambda c: (losses[str(c)], c))
+
+    return {
+        "target_column": target_column,
+        "formation_period": {
+            "name": formation.name,
+            "start": formation.start,
+            "end_inclusive": formation.end_inclusive,
+        },
+        "validation_period": {
+            "name": validation.name,
+            "start": validation.start,
+            "end_inclusive": validation.end_inclusive,
+        },
+        "selection_max_session": FINAL_C_SELECTION_MAX_SESSION,
+        "c_grid": list(c_values),
+        "tie_break": "smallest_c",
+        "n_formation_rows": int(formation_frame.shape[0]),
+        "n_pre_2025_train_rows": int(pre_2025_train_frame.shape[0]),
+        "n_validation_rows": int(validation_frame.shape[0]),
+        "validation_embargo_sessions": embargo_sessions,
+        "selected_c": selected_c,
+        "validation_log_loss_by_model_and_c": log_loss_by_model_and_c,
+        "notes": (
+            "C selected on pre-2025 evidence only (purged formation train -> 2024 "
+            "validation); the selected values are frozen into the experiment config "
+            "and read verbatim by the 2025 evaluation run."
+        ),
+    }
 
 
 def _json_default(obj: Any) -> Any:
@@ -185,28 +343,13 @@ def run_period_study(
     if eval_frame.empty:
         raise ValueError(f"Empty evaluation frame for period {eval_period.name}")
 
-    n_form = formation_frame.shape[0]
-    test_size = formation_internal_test_size
-    if n_form <= initial_train_size + validation_size + test_size:
-        test_size = max(5, n_form // 10)
-        if n_form <= initial_train_size + validation_size + test_size:
-            raise ValueError(
-                f"Formation too small for purged walk-forward "
-                f"(n={n_form}, need > {initial_train_size + validation_size + test_size})"
-            )
-
-    end_col = (
-        "primary_target_end_session_ordinal"
-        if target_column == PRIMARY_TARGET_COLUMN
-        else "secondary_target_end_session_ordinal"
-    )
-    plan = build_purged_event_walk_forward_plan(
-        formation_frame["effective_session_ordinal"],
-        formation_frame[end_col],
+    plan = _build_formation_plan(
+        formation_frame,
+        target_column=target_column,
         initial_train_size=initial_train_size,
         validation_size=validation_size,
-        test_size=test_size,
         step_size=step_size,
+        formation_internal_test_size=formation_internal_test_size,
         embargo_sessions=embargo_sessions,
     )
     validation_splits = _as_validation_splits(plan.validation_splits)

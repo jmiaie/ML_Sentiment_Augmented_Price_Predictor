@@ -129,11 +129,24 @@ walk_forward:
   formation_internal_test_size: 20
   step_size: 20
   c_values: [0.01, 0.1, 1.0, 10.0]
-  # Pre-2025-selected final C, one entry per model, written here ONLY after DEV
-  # + 2024 validation have been reviewed. The 2025 historical evaluation
-  # refuses to start unless this is populated, and never re-selects C on 2025
-  # data (constraints.no_retune_after_freeze). null = not yet selected.
-  final_selected_c: null
+  # Pre-2025-selected final C, PER TARGET, one entry per model, written here
+  # ONLY after DEV + 2024 validation have been reviewed. Each target carries its
+  # own dictionary because the 1-session and 5-session targets have different
+  # horizons and embargoes and their C is selected independently -- one shared
+  # dictionary would silently apply the primary target's C to the secondary.
+  # The 2025 historical evaluation refuses to start unless every logistic model
+  # has a value for BOTH targets, and never re-selects C on 2025 data
+  # (constraints.no_retune_after_freeze). model0 is the majority/unconditional
+  # baseline and has no C. null = not yet selected.
+  # Null until a reviewed DEV + 2024 selection has run. Populate with the block
+  # printed by `scripts/run_historical_text_study_v2.py --select-final-c`, which
+  # selects on purged-formation train -> 2024 validation ONLY (never 2025) and
+  # is frozen before the 2025 HISTORICAL EVALUATION reads it verbatim. A target
+  # is usable only once all three logistic models carry a selected value;
+  # model0_majority_baseline is the baseline and is always null.
+  final_selected_c:
+    primary: null
+    secondary: null
 
 confirmatory_models:
   model0_majority_baseline: unconditional majority-class baseline
@@ -193,6 +206,23 @@ status_history:
       The earlier freeze record was premature and has been removed: it asserted a
       methodology freeze while no pre-2025 evidence existed yet, inverting the
       required chronology. No v2 2025 result exists and none was produced.
+  - utc: "2026-09-17T20:30:00Z"
+    event: final_selected_c restructured to per-target; corpus freeze made zero-network
+    note: >
+      Independent review required three corrections before the data-freeze gate.
+      (1) Freezing is now a separate zero-network operation
+      (scripts/freeze_d9d_snapshot.py) that verifies and flips the existing local
+      bytes instead of re-downloading; the acquisition script's own freeze path is
+      no longer used to freeze the authoritative snapshot. (2) The authoritative
+      runner now requires BOTH the filings and the prices manifests to be DATA
+      FROZEN with a canonical dataset hash before ANY real run, not just the 2025
+      historical evaluation. (3) final_selected_c is now keyed per target
+      (primary/secondary) and is produced by select_final_c_on_validation, which
+      selects on purged-formation train -> 2024 validation and refuses any
+      validation window ending after 2024-12-31. The obsolete "truncated at 200k
+      chars" limitation in the filings manifest was also corrected to the measured
+      uncapped-extraction fact. No DEV, 2024 or 2025 number was produced by any of
+      this, and both manifests remain VALIDATED with freeze_timestamp_utc: null.
 
 notes: >
   This is not a claim that point-in-time text adds predictive value --
