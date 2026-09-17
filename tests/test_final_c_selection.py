@@ -31,14 +31,6 @@ from quant_sentiment.nyse_calendar import NyseCalendar
 FORMATION = PeriodSpec("formation_dev", "2015-01-01", "2023-12-31")
 VALIDATION_2024 = PeriodSpec("validation", "2024-01-01", "2024-12-31")
 EVALUATION_2025 = PeriodSpec("historical_evaluation", "2025-01-01", "2025-12-31")
-WALK_FORWARD_KWARGS: dict[str, Any] = {
-    "initial_train_size": 8,
-    "validation_size": 4,
-    "step_size": 4,
-    "formation_internal_test_size": 4,
-}
-
-
 CAL = NyseCalendar(schedule_start="2015-01-01", schedule_end="2027-12-31")
 
 
@@ -125,7 +117,6 @@ def _select(frame: pd.DataFrame, target_column: str = PRIMARY_TARGET_COLUMN) -> 
         target_column=target_column,
         calendar=CAL,
         embargo_sessions=1,
-        **WALK_FORWARD_KWARGS,
     )
 
 
@@ -139,7 +130,6 @@ def test_selector_refuses_a_2025_validation_window() -> None:
             target_column=PRIMARY_TARGET_COLUMN,
             calendar=CAL,
             embargo_sessions=1,
-            **WALK_FORWARD_KWARGS,
         )
 
 
@@ -225,9 +215,15 @@ def test_report_records_the_pre_2025_evidence_it_used() -> None:
     assert selection["tie_break"] == "smallest_c"
     assert selection["n_formation_rows"] > 0
     assert selection["n_validation_rows"] > 0
-    # Purged walk-forward holds out the tail of the formation window, so the
-    # training rows are a strict subset of it.
-    assert 0 < selection["n_pre_2025_train_rows"] < selection["n_formation_rows"]
+    # P1 semantics: the 2024 fit uses ALL admissible pre-2024 observations, not
+    # the plan's reserved pre-test block, so the training rows are a subset of
+    # the formation window. The rows the rule DOES hold back (a label window
+    # reaching into 2024) are covered in tests/test_execution_geometry.py.
+    assert 0 < selection["n_pre_2025_train_rows"] <= selection["n_formation_rows"]
+    assert (
+        selection["pre_evaluation_training"]["n_train_rows"]
+        == selection["n_pre_2025_train_rows"]
+    )
 
 
 def test_an_empty_validation_window_is_refused() -> None:
@@ -240,7 +236,6 @@ def test_an_empty_validation_window_is_refused() -> None:
             target_column=PRIMARY_TARGET_COLUMN,
             calendar=CAL,
             embargo_sessions=1,
-            **WALK_FORWARD_KWARGS,
         )
 
 
@@ -275,15 +270,32 @@ def test_2024_boundary_rows_cannot_influence_the_selection() -> None:
     scrambled = frame.copy()
     rng = np.random.default_rng(4321)
     n = int(crossing.sum())
+    # The window columns are deliberately NOT corrupted: the boundary rule reads
+    # them, so overwriting one stops the row from being a boundary row at all
+    # (measured: n_excluded_target_window_crossing 1 -> 0) instead of testing
+    # that a boundary row is held out. Everything a model fits on -- features and
+    # labels -- is corrupted.
     for column in scrambled.columns:
-        if column in ("effective_session", "effective_session_ordinal"):
+        if column in (
+            "effective_session",
+            "effective_session_ordinal",
+            "primary_target_end_session_ordinal",
+            "secondary_target_end_session_ordinal",
+        ):
             continue
         if column in (PRIMARY_TARGET_COLUMN, SECONDARY_TARGET_COLUMN):
             scrambled.loc[crossing, column] = 1 - scrambled.loc[crossing, column]
         else:
             scrambled.loc[crossing, column] = rng.normal(size=n)
 
-    assert _select(scrambled)["selected_c"] == baseline
+    corrupted = _select(scrambled)
+    # Fail-if-broken: the row must still be held out, i.e. the corruption above
+    # must not have quietly made it admissible again.
+    assert (
+        corrupted["target_window_slicing"]["validation"]["n_excluded_target_window_crossing"]
+        == 1
+    )
+    assert corrupted["selected_c"] == baseline
 
 
 def test_the_boundary_exclusion_is_load_bearing() -> None:
