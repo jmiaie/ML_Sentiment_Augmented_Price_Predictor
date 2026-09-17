@@ -1,12 +1,21 @@
 # D9-D Acquisition Handoff — 12-issuer SEC EDGAR filings + prices
 
-**Status as of 2026-09-17**: all D9-D AUTHORITATIVE (v2) code and tests are
-complete and passing on synthetic fixtures. The real 12-issuer SEC EDGAR
-10-K/10-Q/8-K corpus has **not** been acquired — this is the one remaining
-step before `formation_dev`/`validation`/`historical_evaluation` can run on
-real data and the required report can be written.
+**Status update (2026-09-17, later same day)**: the acquisition described
+below is now running on a real host with genuine network access (Hai's
+environment) — `data.sec.gov`, `www.sec.gov`, and `query1.finance.yahoo.com`
+all measured reachable (200s, ≤0.25s) from there. A `--max-filings-per-symbol
+1 --no-freeze` dry run succeeded: SEC leg 12/12 issuers ok, Yahoo leg 12
+issuers + SPY at 2,766 rows each with zero missing. The two findings below
+were caught and reported from that real run; both are fixed here.
 
-## Why this is a handoff, not a run
+**Original status (2026-09-17)**: all D9-D AUTHORITATIVE (v2) code and tests
+are complete and passing on synthetic fixtures. The real 12-issuer SEC EDGAR
+10-K/10-Q/8-K corpus had **not** been acquired in this session — this was
+the one remaining step before `formation_dev`/`validation`/
+`historical_evaluation` could run on real data and the required report
+could be written.
+
+## Why this was a handoff from this session, not a run here
 
 This session's own egress proxy blocks both SEC hosts:
 
@@ -15,10 +24,13 @@ $ curl -sS --max-time 10 https://data.sec.gov/submissions/CIK0000320193.json
 curl: (56) CONNECT tunnel failed, response 403
 ```
 
-Confirmed for both `data.sec.gov` and `www.sec.gov` (organization policy,
-not a transient failure). Yahoo Finance access was not separately
-re-tested in this session but the same acquisition script's price leg
-worked previously for the v1 dataset in a prior working session.
+Confirmed for both `data.sec.gov` and `www.sec.gov` — **this session's own
+egress proxy policy**, not a statement about SEC EDGAR's actual
+availability (which a real host, per the status update above, reaches
+without issue). Yahoo Finance access was not separately re-tested in this
+session but the same acquisition script's price leg worked previously for
+the v1 dataset in a prior working session, and is now independently
+confirmed reachable too.
 
 ## What to run
 
@@ -26,7 +38,9 @@ From an environment with real network access to SEC EDGAR and Yahoo
 Finance, with this repository checked out at this branch:
 
 ```bash
-pip install -e ".[dev]"   # picks up pandas-market-calendars, pysentiment2, yfinance et al.
+pip install -e ".[dev,data]"   # dev: pandas-market-calendars, pysentiment2, mypy/pytest/ruff.
+                                # data: yfinance -- NOT in [dev]; omitting it makes
+                                # download_prices() fail on import on a clean install.
 python scripts/acquire_sec_filings_12issuer_daily.py
 ```
 
@@ -40,23 +54,23 @@ This acquires and freezes two datasets:
 Flags: `--no-freeze` for a validate-only dry run, `--max-filings-per-symbol N`
 to sanity-check on a small slice first, `--raw-dir PATH` to redirect output.
 
-## Before running: verify the CIK map
+## CIK map — now independently verified live, all 12 correct
 
 `scripts/acquire_sec_filings_12issuer_daily.py`'s `SYMBOL_CIK` maps all 12
-issuers to their SEC Central Index Keys. **AAPL/MSFT/AMZN match this repo's
-already-frozen v1 acquisition exactly** (cross-checked against
-`data/manifests/edgar_8k_yf_megacap_daily_2015_2025_v1.json`). The other
-nine (GOOGL, NVDA, JPM, XOM, JNJ, PG, WMT, HD, KO) were **not**
-independently verified against a live SEC source when this script was
-written (network was blocked in that session too). Before running for
-real, confirm each against:
+issuers to their SEC Central Index Keys. AAPL/MSFT/AMZN matched this
+repo's already-frozen v1 acquisition exactly from the start (cross-checked
+against `data/manifests/edgar_8k_yf_megacap_daily_2015_2025_v1.json`); the
+other nine (GOOGL, NVDA, JPM, XOM, JNJ, PG, WMT, HD, KO) were flagged in
+the original version of this doc as unverified, since no network was
+available in the session that wrote them.
 
-```
-https://data.sec.gov/submissions/CIK##########.json
-```
-
-(zero-padded to 10 digits) and check the returned `name`/`tickers` fields
-match. A wrong CIK would silently acquire the wrong company's filings.
+**Since verified live against `data.sec.gov/submissions/CIK##########.json`
+(zero-padded to 10 digits) by Hai, from a host with real access**: all 12
+match. 11 match on both `name` and `tickers`. XOM's CIK (`0000034088`) is
+correct — SEC's own `name` field returns `EXXON MOBIL CORP`, confirming
+it — but its `tickers` array is empty in that endpoint's response, which
+is a known SEC data quirk for some large/older filers, not a wrong
+mapping. No CIK in the map points at the wrong company.
 
 ## What comes back
 
@@ -95,6 +109,15 @@ With `data/raw/` populated:
 No runner script exists yet for step 4 (unlike D9-A/B/C's
 `scripts/run_historical_*_study*.py`) — it was not written in this session
 because there is no real data yet to run it against; writing one now would
-be untested against the actual acquired file layout. Write it once the
-real data's exact directory/file structure is confirmed from the handoff
-run's own output.
+be untested against the actual acquired file layout. **Hai has taken this
+step**: writing it once the real acquisition trees exist, against their
+actual layout, rather than a guessed one.
+
+## Live status
+
+As of this update, Hai is running the acquisition in two passes on their
+own host: pass 1 (`--no-freeze`, full universe, no `--max-filings-per-symbol`
+cap) validates the complete pull; pass 2 freezes once pass 1 reports zero
+failures. Nothing has been merged or committed to this branch by that run.
+Filing counts and the frozen manifests will follow from that side once
+pass 1 completes.
