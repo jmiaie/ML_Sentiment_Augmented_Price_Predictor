@@ -105,6 +105,7 @@ def _patch_network(
     monkeypatch.setattr(acq, "download_prices", fake_download_prices)
     monkeypatch.setattr(acq, "acquire_symbol_filings_raw", wrapped_acquire)
     monkeypatch.setattr(acq, "_repo_root", lambda: fake_root)
+    monkeypatch.setenv("SEC_USER_AGENT", "test-suite contact test@example.invalid")
 
 
 def test_freeze_refused_by_default_when_a_filing_fails(
@@ -145,3 +146,34 @@ def test_freeze_with_allow_partial_labels_status_explicitly(
     assert manifest["status"] == "DATA FROZEN (PARTIAL: 1 failed)"
     total_failed = sum(s["filings_failed"] for s in manifest["filing_stats"].values())
     assert total_failed == 1
+
+
+def test_no_sec_user_agent_env_var_fails_clearly(
+    acq: ModuleType, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Real defect found by Hai/Codex review: SEC_USER_AGENT was hard-coded
+    with a personal contact string. It must now come from the environment
+    and fail with a clear error (not a network error, not a silent
+    fallback) when unset."""
+    _patch_network(monkeypatch, acq, tmp_path, fail_first=False)
+    monkeypatch.delenv("SEC_USER_AGENT", raising=False)
+    with pytest.raises(RuntimeError, match="SEC_USER_AGENT"):
+        acq.main([])
+
+
+def test_manifest_records_acquisition_script_provenance(
+    acq: ModuleType, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Both manifests must record the acquisition script's own hash, so a
+    result can be traced back to the exact code that produced it."""
+    _patch_network(monkeypatch, acq, tmp_path, fail_first=False)
+    exit_code = acq.main([])
+    assert exit_code == 0
+
+    filings_manifest_path = tmp_path / "data" / "manifests" / f"{acq.FILINGS_DATASET_ID}.json"
+    filings_manifest = json.loads(filings_manifest_path.read_text())
+    assert filings_manifest["acquisition_script_sha256"]
+
+    prices_manifest_path = tmp_path / "data" / "manifests" / f"{acq.PRICES_DATASET_ID}.json"
+    prices_manifest = json.loads(prices_manifest_path.read_text())
+    assert prices_manifest["acquisition_script_sha256"]

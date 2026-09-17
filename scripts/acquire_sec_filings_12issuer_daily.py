@@ -26,9 +26,14 @@ quant_sentiment.lm_dictionary) happens downstream in the v2 study, reading
 these frozen files. This is a cleaner separation than v1's acquisition
 script, which scored with the (now-superseded) embedded lexicon inline.
 
-Reuses acquire_edgar_8k_yf_megacap_daily.py's already-tested SEC/yfinance
-plumbing (submission fetch, filing filter, price download/validation,
-hashing) via direct import rather than duplicating it.
+Shares SEC/yfinance plumbing (submission fetch, filing filter, price
+download/validation, hashing) with acquire_edgar_8k_yf_megacap_daily.py (v1)
+via common package modules (quant_sentiment.edgar_filings, .market_data_io,
+.hashing, .sec_http) -- not via importing v1's script directly. v1 is
+classified EXPLORATORY / NON-CONFORMING LEGACY EVIDENCE; this authoritative
+v2 script has zero import dependency on it, so retiring or refactoring v1
+cannot silently break v2's acquisition path (fixed 2026-09-17 per
+independent review, tracker Issue #3).
 
 CIK VERIFICATION (resolved 2026-09-17): AAPL/MSFT/AMZN's CIKs below match
 this repo's already-frozen v1 acquisition exactly. The other 9 issuers'
@@ -56,22 +61,16 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT / "src") not in sys.path:
     sys.path.insert(0, str(ROOT / "src"))
-if str(ROOT / "scripts") not in sys.path:
-    sys.path.insert(0, str(ROOT / "scripts"))
 
-from acquire_edgar_8k_yf_megacap_daily import (  # noqa: E402
-    canonical_dataset_hash,
-    download_prices,
+from quant_sentiment.edgar_filings import (  # noqa: E402
     fetch_company_filings,
     filing_archive_url,
     filter_filings,
-    sha256_file,
-    validate_prices,
-    write_csv,
 )
-
 from quant_sentiment.edgar_text import html_to_plain_text  # noqa: E402
-from quant_sentiment.sec_http import SEC_USER_AGENT  # noqa: E402
+from quant_sentiment.hashing import canonical_dataset_hash, sha256_file  # noqa: E402
+from quant_sentiment.market_data_io import download_prices, validate_prices, write_csv  # noqa: E402
+from quant_sentiment.sec_http import get_sec_user_agent  # noqa: E402
 from quant_sentiment.sec_http import sec_get_text as _sec_get_text  # noqa: E402
 
 FILINGS_DATASET_ID = "sec_filings_12issuer_2015_2025_v1"
@@ -251,6 +250,7 @@ def build_filings_manifest(
         "freeze_timestamp_utc": freeze_ts,
         "status": status,
         "sha256": sha256,
+        "acquisition_script_sha256": sha256_file(Path(__file__)),
         "parameters": parameters,
         "event_record_fields": [
             "cik",
@@ -314,6 +314,7 @@ def build_prices_manifest(
         "freeze_timestamp_utc": freeze_ts,
         "status": status,
         "sha256": sha256,
+        "acquisition_script_sha256": sha256_file(Path(__file__)),
         "parameters": parameters,
         "limitations": ["yfinance prices are not exchange-official tapes."],
         "notes": "Raw CSVs under data/raw/ are gitignored, never committed.",
@@ -362,7 +363,7 @@ def main(argv: list[str] | None = None) -> int:
         "start": args.start,
         "end": args.end,
         "forms": list(FORM_TYPES),
-        "sec_user_agent": SEC_USER_AGENT,
+        "sec_user_agent": get_sec_user_agent(),
         "max_filings_per_symbol": args.max_filings_per_symbol,
         "text_max_chars": TEXT_MAX_CHARS,
     }

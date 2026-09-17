@@ -1,5 +1,18 @@
 # Sentiment/textual-signal historical validation (D9-D) — AUTHORITATIVE v2
-# Status: frozen-for-holdout (methodology only -- see "Execution status" below)
+# Status: pre-registered (methodology only -- see "Execution status" below).
+# Was briefly (and incorrectly) marked frozen-for-holdout on creation, before
+# any real data existed to run DEV/2024 validation against. Corrected
+# 2026-09-17 per independent review (Hai/Codex, tracker Issue #3): the real
+# D9-D chronology is pre-register -> acquire/freeze datasets -> run DEV ->
+# run 2024 validation -> independent review of that evidence ->
+# frozen-for-holdout (only then, with holdout_authorization populated below)
+# -> run 2025 once. Note this config's status string is NOT what gates 2025
+# access in code -- historical_text_study_v2.run_period_study's own
+# allow_holdout parameter is the actual gate, and nothing currently calls it
+# with allow_holdout=True, so this mislabeling never authorized a live 2025
+# run. It is fixed anyway because the label itself must not overstate the
+# study's real progress, and the eventual v2 runner script will read this
+# status field to decide whether to permit --allow-2025.
 #
 # Supersedes sentiment_historical_text_study_v1.yaml, which Directive #9 itself
 # labels EXPLORATORY / NON-CONFORMING TO FINAL D9-D (3 issuers, 8-K only,
@@ -31,7 +44,7 @@
 # 2026 (reserved program-wide).
 
 experiment_id: sentiment_hist_text_v2
-status: frozen-for-holdout
+status: pre-registered
 directive: 9
 dataset_ids:
   filings: sec_filings_12issuer_2015_2025_v1
@@ -165,15 +178,30 @@ constraints:
   no_ci_network_fetch: true
   no_2026_use_yet: true
 
-freeze_record:
-  frozen_for_holdout_utc: "2026-09-17T00:00:00Z"
+pre_registration_record:
+  pre_registered_utc: "2026-09-17T00:00:00Z"
   basis: >
     Methodology (universe, features, targets, models, C grid, embargo) taken
     directly from Directive #9's own D9-D spec text, not derived from or
-    tuned against any observed result -- frozen on creation. Real 12-issuer
-    acquisition is a separate, pending step (see docs/D9_D_ACQUISITION_HANDOFF.md);
-    freezing methodology now does not retroactively justify tuning it after
-    acquisition lands.
+    tuned against any observed result -- fixed on creation. Real 12-issuer
+    acquisition is a separate, pending step (see docs/D9_D_ACQUISITION_HANDOFF.md).
+    This record fixes METHODOLOGY only; it is not a holdout-access
+    authorization -- see holdout_authorization below.
+
+holdout_authorization:
+  authorized: false
+  authorized_utc: null
+  reviewer: null
+  basis: null
+  note: >
+    Must remain false (status must remain pre-registered) until: datasets are
+    acquired and frozen with zero filing failures; formation_dev (2015-2023)
+    and validation (2024) have both been executed and their results
+    independently reviewed; and that review confirms no part of the 2015-2024
+    evidence or its review process touched 2025 data. Only then does status
+    become frozen-for-holdout, this block's authorized/authorized_utc/
+    reviewer/basis fields get populated, and a 2025 historical_evaluation run
+    is permitted (once, per constraints.no_retune_after_freeze).
 
 notes: >
   This is not a claim that point-in-time text adds predictive value --
