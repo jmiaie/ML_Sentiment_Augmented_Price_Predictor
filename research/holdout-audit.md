@@ -120,3 +120,41 @@ time, which is exactly what this program's one-time-holdout discipline exists to
 prevent. This is the same category of dilemma already on record for D9-C
 (`options-volatility-risk-lab`)'s VaR fix. Left here for independent/owner review to
 resolve, not decided by this fix.
+
+## v2 AUTHORITATIVE rebuild: code/tests complete, real acquisition pending (2026-09-17)
+
+The v1 study above remains preserved, unmodified, as EXPLORATORY /
+NON-CONFORMING (per Directive #9's own classification — 3 issuers, 8-K only,
+non-LM embedded lexicon, day-level sample unit with manufactured non-event
+days, raw rather than excess-return targets, no proper NYSE calendar). A new
+AUTHORITATIVE v2 was built from Directive #9's own D9-D spec text: the real
+Loughran-McDonald Master Dictionary (via the `pysentiment2` package, never
+vendored into this repo), a real NYSE trading calendar (`pandas_market_calendars`
+— holidays, early closes, time zones), event-level filing observations (no
+manufactured non-event days), excess-return-over-SPY targets (primary
+1-session, secondary 5-session), a purged/session-distance-embargoed
+walk-forward split (not a row-count gap — necessary once samples are pooled
+across 12 issuers with irregular, asynchronous filing timing), and the
+Model 0/1/2/3 confirmatory framework with the spec's own C grid. See
+`configs/experiments/sentiment_historical_text_study_v2.yaml` for the frozen
+(on creation, per that config's own freeze basis) configuration.
+
+**All new code is unit-tested on synthetic fixtures and passing**
+(`tests/test_nyse_calendar.py`, `test_lm_dictionary.py`,
+`test_market_features_v2.py`, `test_walk_forward_v2.py`,
+`test_event_frame_v2.py`, `test_historical_text_study_v2.py` — 45 new tests;
+66 total in this repo's suite, all green). **The real 12-issuer SEC EDGAR
+10-K/10-Q/8-K corpus has not been acquired** — this session's own egress
+proxy blocks `data.sec.gov`/`www.sec.gov` (confirmed 403). No DEV/VAL/2025
+execution has happened under v2, and no result artifacts or report exist
+yet for it. `docs/D9_D_ACQUISITION_HANDOFF.md` documents exactly what a
+network-capable environment needs to run
+(`scripts/acquire_sec_filings_12issuer_daily.py`) and hand back.
+
+Per Directive #9's own D9-D spec text, once real data lands: AAPL/MSFT/AMZN's
+2025 outcomes were already inspected once under v1, and those three issuers
+are part of the authoritative 12-issuer universe — so the conforming D9-D
+2025 result must be labeled **`PREVIOUSLY INSPECTED / HISTORICAL EVALUATION`**,
+never an untouched final holdout. The remaining nine issuers may not be
+isolated and presented as a new untouched confirmatory sample. No shift to
+2026 (reserved program-wide).

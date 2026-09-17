@@ -12,6 +12,8 @@ dependencies = [
   "numpy>=2.1.1",
   "pandas>=2.2.2",
   "scikit-learn>=1.5.2",
+  "pandas-market-calendars>=4.4.1",
+  "pysentiment2>=0.1.1",
 ]
 
 [project.optional-dependencies]

@@ -1,0 +1,184 @@
+# Sentiment/textual-signal historical validation (D9-D) — AUTHORITATIVE v2
+# Status: frozen-for-holdout (methodology only -- see "Execution status" below)
+#
+# Supersedes sentiment_historical_text_study_v1.yaml, which Directive #9 itself
+# labels EXPLORATORY / NON-CONFORMING TO FINAL D9-D (3 issuers, 8-K only,
+# non-LM embedded lexicon, day-level sample unit with manufactured non-event
+# days, raw rather than excess-return targets, no proper NYSE calendar). v1
+# remains preserved, unmodified, for audit trail; none of its numbers are
+# reused here.
+#
+# Methodology here (universe, features, targets, models, C grid, embargo) is
+# taken directly from Directive #9's own D9-D spec text -- none of it was
+# derived from or tuned against any observed result, so this config is frozen
+# on creation, matching D9-C's own precedent in this program.
+#
+# EXECUTION STATUS (2026-09-17): code + tests are complete and pass on
+# synthetic fixtures (tests/test_nyse_calendar.py, test_lm_dictionary.py,
+# test_market_features_v2.py, test_walk_forward_v2.py, test_event_frame_v2.py,
+# test_historical_text_study_v2.py). The 12-issuer SEC EDGAR 10-K/10-Q/8-K
+# corpus has NOT been acquired -- this session's egress proxy blocks
+# data.sec.gov and www.sec.gov (confirmed, 403). See
+# docs/D9_D_ACQUISITION_HANDOFF.md for the network-capable handoff needed
+# before formation_dev/validation/historical_evaluation can actually run.
+#
+# IMPORTANT HOLDOUT CLASSIFICATION (per Directive #9's own D9-D spec text):
+# the existing v1 study already inspected 2025 outcomes for AAPL/MSFT/AMZN,
+# which are part of this authoritative 12-issuer universe. The conforming
+# D9-D 2025 period is therefore `PREVIOUSLY INSPECTED / HISTORICAL EVALUATION`,
+# never an untouched final holdout. The remaining nine issuers are NOT to be
+# isolated and called a new untouched confirmatory sample. Do not shift to
+# 2026 (reserved program-wide).
+
+experiment_id: sentiment_hist_text_v2
+status: frozen-for-holdout
+directive: 9
+dataset_ids:
+  filings: sec_filings_12issuer_2015_2025_v1
+  prices: yf_sentiment_equities_daily_2015_2025_v1
+  dictionary: lm_master_dictionary_2026_v1
+seed: 0
+
+universe:
+  symbols: [AAPL, MSFT, AMZN, GOOGL, NVDA, JPM, XOM, JNJ, PG, WMT, HD, KO]
+  market_context_symbol: SPY
+  forms: [10-K, 10-Q, 8-K]
+  description: >
+    Exactly the 12 issuers named in Directive #9's D9-D spec text, plus SPY
+    for market context. This is a static, present-day-selected universe of
+    large, currently-listed issuers -- it carries survivorship/selection
+    bias (no delisted, merged, or historically-relevant-but-no-longer-
+    prominent issuers), disclosed explicitly, not hidden.
+
+periods:
+  requested_data_start: "2015-01-01"
+  requested_data_end_exclusive: "2026-01-01"
+  formation_dev: {start: "2015-01-01", end_inclusive: "2023-12-31"}
+  validation: {start: "2024-01-01", end_inclusive: "2024-12-31"}
+  historical_evaluation: {start: "2025-01-01", end_inclusive: "2025-12-31"}
+  historical_evaluation_label: "PREVIOUSLY INSPECTED / HISTORICAL EVALUATION"
+  historical_evaluation_label_note: >
+    AAPL/MSFT/AMZN 2025 outcomes were already inspected under v1
+    (sentiment_hist_text_v1_holdout_2025). Not an untouched final holdout.
+    Not shifted to 2026 (reserved program-wide).
+
+sample_unit: event_level_filing_observation
+sample_unit_note: >
+  One row per unique (CIK, accession) filing. No manufactured
+  zero-sentiment non-event days.
+
+point_in_time:
+  field: acceptance_datetime (SEC EDGAR acceptanceDateTime)
+  never: filing_date or reportDate alone
+  decision_cutoff: nyse_regular_session_close
+  routing_rule: >
+    Published before that session's real close (16:00 ET normal day, the
+    actual early-close time on a half day): available as of that session's
+    own close. Published at/after close, weekend, or holiday: advance to
+    the next valid NYSE session. Calendar: pandas_market_calendars NYSE
+    (real holidays + early closes + time zones -- not a weekday-only
+    calendar).
+
+text_features:
+  dictionary: real Loughran-McDonald Master Dictionary via the pysentiment2
+    PyPI package (not vendored/committed in this repo, per the spec's "do
+    not redistribute the full dictionary unless permitted")
+  categories: [negative_fraction, positive_fraction, uncertainty_fraction,
+               litigious_fraction, constraining_fraction, net_tone, log_word_count]
+  finbert_is_not_confirmatory: true
+
+market_features:
+  trailing_only: true
+  no_future_leakage: true
+  columns: [issuer_return_1d, issuer_return_5d, issuer_return_20d,
+            issuer_realized_vol_20d, issuer_realized_vol_60d,
+            issuer_volume_zscore_20d, spy_return_1d, spy_return_5d,
+            spy_return_20d, spy_realized_vol_20d]
+
+targets:
+  primary:
+    name: next_session_excess_return_direction
+    horizon_sessions: 1
+    embargo_sessions: 1
+    definition: (issuer close-to-close return) - (SPY close-to-close return) > 0
+  secondary:
+    name: five_session_forward_excess_return_direction
+    horizon_sessions: 5
+    embargo_sessions: 5
+    definition: same excess-return construction, 5-session horizon
+
+walk_forward:
+  method: purged_session_distance_embargoed
+  method_note: >
+    Not a row-count gap -- multi-issuer event rows are pooled and can share
+    a session or be many sessions apart, so a row-count gap does not
+    reliably correspond to a session-count embargo. Purges by actual NYSE
+    session distance instead (Lopez de Prado-style purged/embargoed CV).
+  initial_train_size: 60
+  validation_size: 20
+  formation_internal_test_size: 20
+  step_size: 20
+  c_values: [0.01, 0.1, 1.0, 10.0]
+
+confirmatory_models:
+  model0_majority_baseline: unconditional majority-class baseline
+  model1_market_only: logistic regression, market-only features
+  model2_text_only: logistic regression, real LM text features only
+  model3_market_text_combined: logistic regression, market + text features
+  headline_comparison: model3_market_text_combined minus model1_market_only
+  headline_metric_primary: log_loss
+  headline_target: primary (1-session)
+  secondary_target_role: pre-specified robustness check, not the headline
+  required_metrics: [log_loss, brier_score, balanced_accuracy]
+  reported_where_valid: [precision, recall, f1, roc_auc, calibration, sample_size]
+  key_question: >
+    Incremental value of text beyond market features -- not raw
+    combined-model accuracy.
+
+uncertainty:
+  fold_distributions: true
+  bootstrap: event_aware_block_bootstrap
+  bootstrap_note: >
+    Blocks of consecutive session-ordered rows resampled with replacement
+    (not iid-per-row), preserving local temporal/event dependence.
+
+exploratory_methods:
+  finbert: exploratory_only_after_confirmatory_frozen_and_evaluated
+  xgboost: exploratory_only_after_confirmatory_frozen_and_evaluated
+  may_not_replace_unfavorable_confirmatory_result: true
+
+economic_evaluation:
+  role: secondary_only
+  threshold_selection: validation_data_only_frozen_before_2025
+  report: [turnover, costs]
+  may_not_redefine_primary_predictive_hypothesis: true
+
+required_report:
+  path: research/historical-textual-signal-study.md
+  title: "Does Point-in-Time Financial Text Add Incremental Predictive Information?"
+  subtitle: "A Historical Walk-Forward Study of SEC Filing-Derived and Market Features"
+  if_model3_does_not_materially_improve: state_so_explicitly_no_target_search
+
+constraints:
+  no_retune_after_freeze: true
+  no_universe_change_after_dataset_freeze: true
+  no_ci_network_fetch: true
+  no_2026_use_yet: true
+
+freeze_record:
+  frozen_for_holdout_utc: "2026-09-17T00:00:00Z"
+  basis: >
+    Methodology (universe, features, targets, models, C grid, embargo) taken
+    directly from Directive #9's own D9-D spec text, not derived from or
+    tuned against any observed result -- frozen on creation. Real 12-issuer
+    acquisition is a separate, pending step (see docs/D9_D_ACQUISITION_HANDOFF.md);
+    freezing methodology now does not retroactively justify tuning it after
+    acquisition lands.
+
+notes: >
+  This is not a claim that point-in-time text adds predictive value --
+  it is a reproducible, pre-registered test of whether it does, using
+  real academic Loughran-McDonald categories (not a fabricated lexicon),
+  a real NYSE calendar, and excess-return-over-SPY targets. If Model 3
+  does not materially improve over Model 1, the required report says so
+  explicitly rather than searching for a favorable cut of the data.
