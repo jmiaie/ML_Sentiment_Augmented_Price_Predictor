@@ -127,8 +127,9 @@ sentiment pull request #4 is untouched.
 the headline log-loss difference from `period_metrics` and compare it to the recorded
 headline value; confirm the bootstrap interval brackets zero for both targets; confirm the
 binding label below appears verbatim; confirm the training/evaluation geometry (zero row
-intersection, purge before evaluation start, embargo of one session) from the artifacts
-rather than from this prose; and re-run `claim_crosscheck.py` to confirm that every
+intersection, purge before evaluation start, and session-distance embargo of 1 session for the
+primary target and 5 sessions for the secondary target) from the artifacts rather than from
+this prose; and re-run `claim_crosscheck.py` to confirm that every
 quantitative cell printed in §7 and §8 of the paper is derived from an artifact.
 
 **Binding 2025 label:** `PREVIOUSLY INSPECTED / HISTORICAL EVALUATION`. It is not an
