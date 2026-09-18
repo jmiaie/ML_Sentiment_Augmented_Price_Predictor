@@ -34,19 +34,23 @@ Disposition: **REJECTED**, with a mechanical guard rather than a promise.
 **CRT-4 — "Does any prose number fail to appear in an artifact?"**
 This was checked the hard way. `claim_crosscheck.py` re-derives the pack's claims
 from the artifacts rather than from the generator's intermediates, and the
-citation table is re-hashed by `check`. One class of prose number is *not*
-independently contract-checked: the log-loss values in §7's two small tables and
-the pre-2025 block values in §8. Those were read from the artifacts when the
-document was written, but nothing mechanical prevents a later edit from changing
-them. Disposition: **UPHELD as a residual gap**, disclosed here rather than left
-for a reviewer to find.
+citation table is re-hashed by `check`. The residual gap disclosed here in an
+earlier revision — the §7 table values and the §8 block values — is now closed
+mechanically: the cross-checker reads every quantitative cell printed in §7 and §8
+back out of the paper and compares it against the accepted artifacts, namely the
+four model log losses, the headline log-loss delta, both interval bounds and the
+balanced-accuracy delta for each target in §7, and the delta, both interval bounds,
+`n_eval` and `n_train` for each of the four block/target rows in §8. A cell that
+drifts from its artifact fails the build. Disposition: **RESOLVED** — by mechanical
+check, not by convention.
 
 **CRT-5 — "The headline values in §7: are they re-derived or copied?"**
-Re-derived. The cross-checker reads the headline log-loss difference out of each
-2025 artifact and asserts that the paper states the measured value rounded to eight
-decimals, in addition to asserting that the paper carries both full artifact
-hashes, the frozen config hash, and the binding period label verbatim. A mismatch
-fails the build. Disposition: **REJECTED** as a defect.
+Re-derived. The cross-checker reads the headline log-loss difference, both interval
+bounds and the balanced-accuracy delta out of each 2025 artifact and asserts that the
+paper prints each of them at the exact precision the document uses, in addition to
+asserting that the paper carries both full artifact hashes, the frozen config hash,
+and the binding period label verbatim. A mismatch fails the build.
+Disposition: **REJECTED** as a defect.
 
 **CRT-6 — "Is 'the market-only model was best of the four' stated as a finding
 about markets?"**

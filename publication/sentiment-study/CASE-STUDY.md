@@ -27,8 +27,9 @@ excess over SPY, so a model cannot score by learning the market. Period slicing 
 target-aware, so a row is admitted to a period only when its whole target window
 lies inside that period. Training and evaluation are separated by a purge by NYSE
 session distance plus an embargo, not by a row count. Frozen inputs are verified
-by content hash before any fitting, fail-closed. And the comparison, the metric and
-the regularisation were fixed before 2025 was touched.
+by content hash before any fitting, fail-closed. And the comparison, the headline
+metric, the target definitions and the regularisation were frozen before the D9-D
+v2 historical-evaluation run was executed.
 
 ## What came back
 
@@ -40,8 +41,9 @@ in all four earlier block/target combinations.
 
 A second reading matters as much as the first: the intervals are wide. The data do
 not cleanly separate "text adds nothing" from "text adds a little, in either
-direction". What they rule out — on this universe, with this representation, at
-these horizons — is a large, reliable improvement.
+direction". On this universe, with this representation, at these horizons, the
+intervals remain compatible with small effects in either direction; this study
+therefore does not establish an incremental improvement from the text features.
 
 ## What a decision-maker should take from it
 
@@ -52,9 +54,9 @@ these horizons — is a large, reliable improvement.
    evaluation rows with wide intervals is not a demonstration of absence. Anyone
    arguing the opposite direction from this same evidence is overreading it.
 3. **Treat the negative result as the deliverable.** The value here is that the
-   answer was produced by a comparison fixed before the evaluation period was
-   read, with the regularisation chosen on pre-2025 data and the binding period
-   label recorded as `PREVIOUSLY INSPECTED / HISTORICAL EVALUATION`. A result
+   reported result was produced under a specification frozen before this D9-D v2
+   evaluation run, while the period itself remains classified
+   `PREVIOUSLY INSPECTED / HISTORICAL EVALUATION`. A result
    obtained that way is reusable. A result obtained by trying representations until
    one of them worked is not, no matter how good the number looks.
 4. **Beware the null that is really a specification.** A margin over a majority

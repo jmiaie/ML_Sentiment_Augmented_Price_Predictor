@@ -93,6 +93,38 @@ Recorded so a reviewer does not have to rediscover them:
   4. The 2025 evaluation block is 197 rows, so the intervals are wide relative to
      the effects under discussion.
 
+## Independent audit remediation (2026-09-18)
+
+An independent audit of the live draft pull request found one stale document
+contract and four wording and threshold defects. All five are repaired here. The
+audit is recorded because an audit trail that shows only the wins is not one.
+
+1. **P1-1 — the source gate used an invented field list.** `SOURCE-GATE.md` had
+   claimed no program-defined schema existed and had authored its own fourteen
+   fields. It now uses the authoritative fourteen-field contract defined by
+   Directive #10, and the claim that no schema exists is removed. The former extra
+   sections are retained as unnumbered pack detail after the fourteen fields.
+2. **P1-2 — wording implied the 2025 period was fresh.** `CASE-STUDY.md` said the
+   specification was fixed "before 2025 was touched", and that the result came from
+   a comparison fixed "before the evaluation period was read". Both are replaced
+   with study-specific execution wording that scopes the freeze to this v2
+   evaluation run while the period stays classified `PREVIOUSLY INSPECTED /
+   HISTORICAL EVALUATION`. The paper's abstract is scoped the same way.
+3. **P1-3 — the abstract overstated the null.** "On the 2025 evaluation period the
+   answer is no" is replaced by the pre-specified-comparison wording: the
+   comparison did not demonstrate an improvement from adding filing-text features.
+   The exact deltas and the zero-spanning intervals follow unchanged.
+4. **P2-1 — an undefined threshold.** `CASE-STUDY.md` described what the intervals
+   rule out as "a large, reliable improvement", but this study defines no
+   minimum-effect threshold, so the word was doing substantive work after the fact.
+   The sentence now states the compatibility claim and the actual bounds.
+5. **P2-2 — a stale red-team finding.** `CLAIM-RED-TEAM.md` CRT-4 still said the §7
+   and §8 values were not independently contract-checked. Resolved by extending the
+   check rather than by restating the gap: `claim_crosscheck.py` now compares every
+   quantitative cell printed in §7 and §8 — the model log losses, the headline
+   delta, both interval bounds, the balanced-accuracy delta, `n_eval` and `n_train`
+   — against the accepted artifacts.
+
 ## Prohibitions — confirmations
 
 - No retraining, retuning, data reacquisition, or re-execution of the 2025

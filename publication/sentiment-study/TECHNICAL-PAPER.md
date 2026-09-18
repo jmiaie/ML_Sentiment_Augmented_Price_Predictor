@@ -11,10 +11,13 @@ Draft publication document. Lane D, Directive #9 / D10. Micap AI LLC.
 We ask one question: does a logistic classifier given Loughran-McDonald
 filing-text features plus market features predict a short-horizon excess-return
 direction better than the same classifier given market features alone? The
-comparison, its metric, its horizon and its regularisation were fixed before the
-2025 period was evaluated.
+comparison, its metric, its horizon and its regularisation were frozen before this
+D9-D v2 historical-evaluation run was executed; the period itself remains
+classified `PREVIOUSLY INSPECTED / HISTORICAL EVALUATION`, and had been inspected
+before this run.
 
-On the 2025 evaluation period the answer is no. For the primary target
+On the 2025 historical-evaluation block, the pre-specified comparison did not
+demonstrate an improvement from adding filing-text features. For the primary target
 (next-session excess-return direction) the combined model's log loss exceeded the
 market-only model's by `+0.0040902` (block-bootstrap 95% interval
 `[-0.0048506, +0.0108001]`, 500 resamples, block size 10). For the secondary

@@ -59,6 +59,8 @@ QUOTED = re.compile(r'"[^"\n]*"')
 # study uses an untouched holdout" still fails.
 CLAUSE_BREAKS = (";", ",", ":", " but ", " and ", " -- ", " - ", ". ")
 MAX_WORDS_AFTER_CUE = 2
+# A printed number, with its sign. Used to read a table cell back out of the paper.
+NUM = re.compile(r"[+-]?\d+(?:\.\d+)?")
 
 
 def violations(text: str) -> list[tuple[str, int]]:
@@ -208,17 +210,66 @@ def main() -> int:
         ok(k["selected_regularization"]["model0_majority_baseline"] is None,
            f"baseline has no C for {target}")
 
-    # ---- paper prose values: re-derived from the artifacts, never copied ----
+    # ---- EVERY quantitative cell printed in §7 and §8 is derived from an artifact.
+    # §7: the four model log losses, the headline delta, both interval bounds and the
+    # balanced-accuracy delta, per target. §8: the delta, both interval bounds, n_eval
+    # and n_train, for each of the four block/target rows. A printed cell that no
+    # longer matches its artifact fails the build, so no cell can drift unseen.
     paper_text = (PACK / "TECHNICAL-PAPER.md").read_text(encoding="utf-8")
-    for target in TARGETS:
-        km = art(target, "historical_evaluation")["result"]["key_metrics"]
-        for model in ("model0", "model1", "model2", "model3"):
-            ok(repr(round(km[f"{model}_log_loss"], 10)) in paper_text,
-               f"paper states measured 2025 {model} log loss for {target}")
-        for period in ("formation_dev", "validation"):
+    sec7 = paper_text.split("## 7. Results", 1)[1].split("## 8.", 1)[0]
+    sec8 = paper_text.split("## 8. Pre-2025 record", 1)[1].split("## 9.", 1)[0]
+    sec7_blocks = {
+        "primary": sec7.split("Primary target", 1)[1].split("Secondary target", 1)[0],
+        "secondary": sec7.split("Secondary target", 1)[1],
+    }
+
+    def row_tokens(section: str, key: tuple, where: str) -> list[str]:
+        """The numbers printed in the table row whose leading cells equal `key`."""
+        for line in section.splitlines():
+            cells = [c.strip().strip("`") for c in line.strip().strip("|").split("|")]
+            if tuple(cells[:len(key)]) == key:
+                return NUM.findall(" ".join(cells[len(key):]).replace(",", ""))
+        ok(False, f"{where}: table row {key} not found")
+        raise SystemExit(1)
+
+    def printed_is(tokens: list[str], expected: list[tuple[float, int]], where: str) -> None:
+        """Each printed number equals its artifact value at the precision printed."""
+        ok(len(tokens) == len(expected),
+           f"{where}: {len(tokens)} numbers printed, {len(expected)} expected")
+        for token, (value, dp) in zip(tokens, expected, strict=True):
+            ok(abs(float(token) - value) <= 0.5 * 10 ** -dp,
+               f"{where}: printed {token} vs artifact {value:.{dp}f}")
+
+    for target, block in sec7_blocks.items():
+        result = art(target, "historical_evaluation")["result"]
+        km = result["key_metrics"]
+        ci = km["headline_bootstrap_delta_log_loss_ci95"]
+        for model in MODELS:
+            printed_is(row_tokens(block, (model,), f"§7 {target}"),
+                       [(result["period_metrics"][model]["log_loss"], 10)],
+                       f"§7 {target} {model} log loss")
+        prose = " ".join(line for line in block.splitlines()
+                         if not line.lstrip().startswith("|"))
+        for label, value, dp in (
+            ("headline delta", km["headline_delta_log_loss_model3_minus_model1"], 7),
+            ("interval low", ci["ci_low"], 7),
+            ("interval high", ci["ci_high"], 7),
+            ("balanced-accuracy delta",
+             km["headline_delta_balanced_accuracy_model3_minus_model1"], 10),
+        ):
+            ok(f"{value:+.{dp}f}" in prose,
+               f"§7 {target} {label} printed as {value:+.{dp}f}")
+
+    for period, block_label in (("formation_dev", "development internal test"),
+                                ("validation", "2024 validation")):
+        for target in TARGETS:
             pkm = art(target, period)["result"]["key_metrics"]
-            ok(repr(round(pkm["headline_delta_log_loss_model3_minus_model1"], 8)) in paper_text,
-               f"paper states measured {period} headline delta for {target}")
+            pci = pkm["headline_bootstrap_delta_log_loss_ci95"]
+            printed_is(row_tokens(sec8, (block_label, target), f"§8 {block_label}"),
+                       [(pkm["headline_delta_log_loss_model3_minus_model1"], 8),
+                        (pci["ci_low"], 8), (pci["ci_high"], 8),
+                        (float(pkm["n_eval_rows"]), 0), (float(pkm["n_train_rows"]), 0)],
+                       f"§8 {target}/{period}")
 
     # ---- P2.1 fold-distribution carry-over: machine-verified disclosure ----
     for target in TARGETS:
