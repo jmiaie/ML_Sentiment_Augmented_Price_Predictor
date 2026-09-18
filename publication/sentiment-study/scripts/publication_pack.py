@@ -41,7 +41,9 @@ PACK_SUFFIXES = (".md", ".json", ".csv", ".svg", ".py", ".yml")
 HEX64 = re.compile(r"\b[0-9a-f]{64}\b")
 HEX40 = re.compile(r"\b[0-9a-f]{40}\b")
 ABBR = re.compile(r"\b([0-9a-f]{7,63})…")
-ROW = re.compile(r"^\|\s*(C-\d+)\s*\|([^|]*)\|([^|]*)\|([^|]*)\|")
+ROW = re.compile(r"^\|\s*((?:C|G)-\d+)\s*\|([^|]*)\|([^|]*)\|([^|]*)\|")
+# Any labelled row in the map, whatever its prefix: used to prove ROW missed nothing.
+ANYROW = re.compile(r"^\|\s*([A-Z]+-\d+)\s*\|")
 SELFTEST_FIXTURES = {hashlib.sha256(b"abc").hexdigest()}
 
 
@@ -253,6 +255,8 @@ def check() -> int:
     failures: list[str] = []
 
     artifact_hashes = 0
+    if not repro["source_artifacts"]:
+        failures.append("reproducibility.json lists no source_artifacts — the hash gate would pass vacuously")
     for src in repro["source_artifacts"]:
         path = ROOT / src["path"]
         if not path.is_file():
@@ -279,6 +283,14 @@ def check() -> int:
 
     citations = 0
     for line in SOURCE_MAP.read_text(encoding="utf-8").splitlines():
+        # Every `| ID-NN | ... |` row must be hash-checked. Matching only the label class
+        # ROW happens to name is how four G-rows went unverified (P1, 2026-09-18): the gate
+        # printed "18 map citations verified" and never mentioned the rows it did not match.
+        if ANYROW.match(line) and not ROW.match(line):
+            failures.append(
+                f"map row {ANYROW.match(line).group(1)}: label class not covered by the citation gate"
+            )
+            continue
         match = ROW.match(line)
         if not match:
             continue
@@ -294,6 +306,9 @@ def check() -> int:
             failures.append(f"citation {match.group(1)}: {rel} hash mismatch")
             continue
         citations += 1
+
+    if not citations:
+        failures.append("no map citations verified — the citation gate would pass vacuously")
 
     for problem in failures:
         print(f"FAIL {problem}")
