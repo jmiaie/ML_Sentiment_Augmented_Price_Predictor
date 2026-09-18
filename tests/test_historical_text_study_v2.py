@@ -14,9 +14,14 @@ from quant_sentiment.historical_text_study_v2 import (
 from quant_sentiment.market_features_v2 import MARKET_FEATURE_COLUMNS_V2
 from quant_sentiment.nyse_calendar import NyseCalendar
 
+# The one calendar every synthetic frame and every run_period_study call
+# below shares: the boundary invariant compares session ordinals, so the
+# frame and the slice must be built from the SAME session list.
+CAL = NyseCalendar(schedule_start="2015-01-01", schedule_end="2020-12-31")
+
 
 def _synthetic_event_frame(n_issuers: int = 3, seed: int = 0) -> pd.DataFrame:
-    cal = NyseCalendar(schedule_start="2015-01-01", schedule_end="2020-12-31")
+    cal = CAL
     sessions = pd.DatetimeIndex(cal._schedule.index)  # type: ignore[attr-defined]
     rng = np.random.default_rng(seed)
 
@@ -83,6 +88,7 @@ def test_2025_evaluation_blocked_without_allow_holdout(event_frame: pd.DataFrame
     with pytest.raises(RuntimeError, match="FINAL CONFIGURATION FROZEN"):
         run_period_study(
             event_frame,
+            calendar=CAL,
             formation=formation,
             eval_period=historical_eval,
             target_column="primary_direction",
@@ -98,6 +104,7 @@ def test_deterministic_c_selection_is_reproducible(event_frame: pd.DataFrame) ->
     def _run() -> dict[str, Any]:
         return run_period_study(
             event_frame,
+            calendar=CAL,
             formation=formation,
             eval_period=validation,
             target_column="primary_direction",
@@ -122,6 +129,7 @@ def test_run_produces_headline_delta_and_bootstrap_ci(event_frame: pd.DataFrame)
     validation = PeriodSpec("validation", "2019-01-01", "2019-12-31")
     result = run_period_study(
         event_frame,
+        calendar=CAL,
         formation=formation,
         eval_period=validation,
         target_column="primary_direction",
@@ -150,6 +158,7 @@ def test_secondary_target_uses_five_session_embargo(event_frame: pd.DataFrame) -
     validation = PeriodSpec("validation", "2019-01-01", "2019-12-31")
     result = run_period_study(
         event_frame,
+        calendar=CAL,
         formation=formation,
         eval_period=validation,
         target_column="secondary_direction",
@@ -171,6 +180,7 @@ def test_allow_holdout_true_permits_2025_style_period(event_frame: pd.DataFrame)
     historical_eval = PeriodSpec("historical_evaluation", "2019-01-01", "2019-12-31")
     result = run_period_study(
         event_frame,
+        calendar=CAL,
         formation=formation,
         eval_period=historical_eval,
         target_column="primary_direction",
