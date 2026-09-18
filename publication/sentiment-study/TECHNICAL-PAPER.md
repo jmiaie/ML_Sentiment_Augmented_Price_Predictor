@@ -108,11 +108,15 @@ because it was fixed as the headline metric before evaluation.
 
 Geometry is read from the artifacts, not asserted here:
 
-- Training block `2015-04-02` → `2024-12-20`, 2,099 training rows.
-- Purge cutoff session `2025-01-03`; last training target end ordinal 3,768 sits
-  before the cutoff ordinal 3,775.
-- First effective evaluation session `2025-01-06`; evaluation block
-  `2025-01-06` → `2025-12-15`, 197 evaluation rows, 12 unique issuers.
+- Training block `2015-04-02` → `2024-12-20`, 2,099 training rows for the
+  primary target; 2,098 for the secondary target, whose 5-session embargo
+  removes one further row.
+- Purge cutoff session `2025-01-03` at ordinal 3,775 (primary target);
+  `2024-12-27` at ordinal 3,771 (secondary target). Last training target end
+  ordinal 3,768 is the same for both targets and sits before either cutoff.
+- First effective evaluation session `2025-01-06` (ordinal 3,776) for both
+  targets; evaluation block `2025-01-06` → `2025-12-15`, 197 evaluation rows,
+  12 unique issuers (identical for both targets).
 - Embargo: 1 session (primary), 5 sessions (secondary), applied by actual NYSE
   session distance rather than row count, because pooled multi-issuer event rows
   can share or span sessions.
