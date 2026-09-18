@@ -18,6 +18,10 @@ No HTTP client is imported (no requests / urllib / yfinance).
 ``tests/test_freeze_d9d_snapshot.py`` proves it completes with sockets
 disabled, and that a refusal leaves both manifests untouched.
 
+The verifiers themselves live in ``quant_sentiment.frozen_inputs``, which the
+authoritative runner also calls before any empirical execution -- one
+verification path, so the freeze and a run cannot drift apart.
+
 Verified, fail closed (exit 2 on any mismatch):
   * 12 issuers, each with an index CSV and text files present on disk
   * every filing index row is ``status == OK`` and the total equals the
@@ -37,7 +41,6 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import csv
 import json
 import sys
 from datetime import datetime, timezone
@@ -47,20 +50,21 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT / "src") not in sys.path:
     sys.path.insert(0, str(ROOT / "src"))
-from quant_sentiment.acquisition import (  # noqa: E402
-    canonical_dataset_hash,
-    sha256_file,
+from quant_sentiment.frozen_inputs import (  # noqa: E402
+    InputIntegrityError,
+    verify_filings,
+    verify_prices,
 )
 
 FILINGS_DATASET_ID = "sec_filings_12issuer_2015_2025_v1"
 PRICES_DATASET_ID = "yf_sentiment_equities_daily_2015_2025_v1"
 STATUS_VALIDATED = "VALIDATED"
 STATUS_FROZEN = "DATA FROZEN"
-EXPECTED_ISSUERS = 12
 
-
-class FreezeRefused(RuntimeError):
-    """A verification failed. Both manifests are left exactly as they were."""
+# The freeze path and the run path share ONE refusal type and ONE set of
+# verifiers (quant_sentiment.frozen_inputs); the freeze keeps its historical
+# name for its own callers.
+FreezeRefused = InputIntegrityError
 
 
 def _utc_now() -> str:
@@ -77,145 +81,6 @@ def write_manifest(path: Path, manifest: dict[str, Any]) -> None:
     round-trip the committed manifests byte-for-byte, so the only diff this
     script produces is the fields it deliberately changes."""
     path.write_text(json.dumps(manifest, indent=2, sort_keys=False) + "\n", encoding="utf-8")
-
-
-def _count_data_rows(path: Path) -> int:
-    with path.open(encoding="utf-8", newline="") as handle:
-        return sum(1 for _ in csv.DictReader(handle))
-
-
-def verify_filings(manifest: dict[str, Any], dataset_dir: Path) -> dict[str, Any]:
-    """Verify the existing filing bytes. Returns the measurements to report."""
-    symbols = [str(s) for s in manifest.get("symbols") or []]
-    if len(symbols) != EXPECTED_ISSUERS:
-        raise FreezeRefused(f"manifest lists {len(symbols)} issuers, expected {EXPECTED_ISSUERS}")
-
-    parameters = manifest.get("parameters") or {}
-    expected_rows = int(parameters["text_n_files"])
-    if int(parameters["truncation_count"]) != 0:
-        raise FreezeRefused(
-            f"truncation_count is {parameters['truncation_count']}, expected 0 -- "
-            "the corpus is not uncapped, do not freeze it"
-        )
-    if (
-        parameters.get("extraction_policy") != "uncapped"
-        or parameters.get("text_max_chars") is not None
-    ):
-        raise FreezeRefused(
-            f"extraction_policy is {parameters.get('extraction_policy')!r} with text_max_chars "
-            f"{parameters.get('text_max_chars')!r}, expected 'uncapped' and null -- the corpus "
-            "is not uncapped, do not freeze it"
-        )
-    if int(parameters.get("text_files_at_legacy_cap_200000", 0)) != 0:
-        raise FreezeRefused(
-            f"text_files_at_legacy_cap_200000 is "
-            f"{parameters['text_files_at_legacy_cap_200000']}, expected 0 -- the corpus is not "
-            "uncapped, do not freeze it"
-        )
-
-    listings = dataset_dir / "filings"
-    index_rows = 0
-    referenced_text: set[str] = set()
-    for symbol in symbols:
-        index_path = listings / f"{symbol}_index.csv"
-        if not index_path.is_file():
-            raise FreezeRefused(f"missing filing index CSV for {symbol}: {index_path}")
-        with index_path.open(encoding="utf-8", newline="") as handle:
-            rows = list(csv.DictReader(handle))
-        if not rows:
-            raise FreezeRefused(f"{symbol}: index CSV has no rows")
-        not_ok = [r for r in rows if r.get("status") != "OK"]
-        if not_ok:
-            raise FreezeRefused(
-                f"{symbol}: {len(not_ok)} index row(s) not status OK "
-                f"(e.g. accession {not_ok[0].get('accession')!r} "
-                f"status {not_ok[0].get('status')!r})"
-            )
-        for row in rows:
-            rel = str(row.get("text_relpath") or "")
-            if not rel:
-                raise FreezeRefused(
-                    f"{symbol}: index row {row.get('accession')!r} has no text_relpath"
-                )
-            referenced_text.add(rel)
-        index_rows += len(rows)
-
-    if index_rows != expected_rows:
-        raise FreezeRefused(
-            f"index rows on disk = {index_rows}, manifest parameters.text_n_files = {expected_rows}"
-        )
-
-    recorded = {k: v for k, v in (manifest.get("sha256") or {}).items() if k != "dataset_canonical"}
-    if not recorded:
-        raise FreezeRefused("filings manifest records no per-file sha256 entries")
-
-    measured: dict[str, str] = {}
-    for rel, expected in sorted(recorded.items()):
-        target = dataset_dir / rel
-        if not target.is_file():
-            raise FreezeRefused(f"recorded file missing on disk: {rel}")
-        actual = sha256_file(target)
-        if actual != expected:
-            raise FreezeRefused(
-                f"sha256 mismatch for {rel}: on-disk {actual} != recorded {expected} "
-                "(the snapshot has been modified; do not freeze)"
-            )
-        measured[rel] = actual
-
-    hashed_text = {k for k in measured if k.startswith("filings/text/")}
-    if referenced_text != hashed_text:
-        only_rows = sorted(referenced_text - hashed_text)[:3]
-        only_files = sorted(hashed_text - referenced_text)[:3]
-        raise FreezeRefused(
-            "index-referenced text files do not match the hashed text files "
-            f"(referenced-only {only_rows}, hashed-only {only_files})"
-        )
-
-    canonical = canonical_dataset_hash(measured)
-    recorded_canonical = (manifest.get("sha256") or {}).get("dataset_canonical")
-    if canonical != recorded_canonical:
-        raise FreezeRefused(
-            f"recomputed canonical dataset hash {canonical} != recorded {recorded_canonical}"
-        )
-
-    return {
-        "issuers": len(symbols),
-        "index_rows_ok": index_rows,
-        "files_verified": len(measured),
-        "text_files": len(hashed_text),
-        "canonical": canonical,
-        "file_hashes": measured,
-    }
-
-
-def verify_prices(manifest: dict[str, Any], dataset_dir: Path) -> dict[str, Any]:
-    """Verify the existing price bytes and compute the hashes it is missing."""
-    symbols = [str(s) for s in manifest.get("symbols") or []]
-    if not symbols:
-        raise FreezeRefused("prices manifest lists no symbols")
-    row_counts = dict(manifest.get("row_counts") or {})
-
-    file_hashes: dict[str, str] = {}
-    for symbol in symbols:
-        path = dataset_dir / f"{symbol}.csv"
-        if not path.is_file():
-            raise FreezeRefused(f"missing price CSV for {symbol}: {path}")
-        expected_rows = row_counts.get(symbol)
-        if expected_rows is None:
-            raise FreezeRefused(f"prices manifest records no row_count for {symbol}")
-        actual_rows = _count_data_rows(path)
-        if actual_rows != int(expected_rows):
-            raise FreezeRefused(
-                f"{symbol}.csv has {actual_rows} data rows, manifest records {expected_rows}"
-            )
-        file_hashes[f"{symbol}.csv"] = sha256_file(path)
-
-    return {
-        "symbols": len(symbols),
-        "csvs_hashed": len(file_hashes),
-        "canonical": canonical_dataset_hash(file_hashes),
-        "file_hashes": file_hashes,
-    }
 
 
 def freeze(root: Path, *, now: str | None = None, dry_run: bool = False) -> dict[str, Any]:

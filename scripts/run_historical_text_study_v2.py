@@ -14,7 +14,10 @@ Examples:
       --periods historical_evaluation --allow-2025
 
   # PRE-2025 only: select the final C on the 2024 validation window and print
-  # the block to paste into walk_forward.final_selected_c. Runs no period study.
+  # the block to paste into walk_forward.final_selected_c. Writes no ordinary
+  # period-study result artifact, but it DOES score the pre-specified 2024
+  # validation window for every C candidate as the selection evidence.
+  # Never reads 2025.
   python scripts/run_historical_text_study_v2.py --select-final-c
 
 Fail-closed gates (each exits 2):
@@ -46,6 +49,7 @@ import pandas as pd
 import yaml
 
 from quant_sentiment.event_frame_v2 import FilingEvent, build_event_frame
+from quant_sentiment.frozen_inputs import InputIntegrityError, verify_frozen_inputs
 from quant_sentiment.historical_text_study_v2 import (
     FINAL_C_SELECTION_MAX_SESSION,
     MODEL_SPECS,
@@ -64,6 +68,23 @@ from quant_sentiment.nyse_calendar import NyseCalendar
 FROZEN_CONFIG_STATUS = "frozen-final"
 HOLDOUT_PERIOD_NAME = "historical_evaluation"
 FROZEN_MANIFEST_STATUS = "DATA FROZEN"
+
+# The frozen D9-D input record, measured by the freeze on 2026-09-17T20:46:08Z.
+# Every run re-hashes the corpus from disk and refuses unless it still matches
+# this record -- the manifests' own recorded values are not trusted, because
+# data/raw is gitignored and a raw file could change after the freeze. One
+# verification path (quant_sentiment.frozen_inputs) for DEV, 2024,
+# --select-final-c and the 2025 historical evaluation alike.
+FROZEN_INPUTS: dict[str, Any] = {
+    "freeze_timestamp_utc": "2026-09-17T20:46:08Z",
+    "filings_canonical": "3b2941870391b8584afaad46417cf3e6a0fe03509238fc6ac21958bb4c90f7f4",
+    "filings_files": 2361,
+    "filings_text_files": 2349,
+    "filings_rows": 2349,
+    "issuers": 12,
+    "prices_canonical": "6ca6e433983fb5f629d084d0964229d5b9c91cbee0756f686598bea6c90d4cb2",
+    "price_csvs": 13,
+}
 PRE_2025_PERIODS = ("formation_dev", "validation")
 ALL_PERIODS = (*PRE_2025_PERIODS, HOLDOUT_PERIOD_NAME)
 
@@ -307,6 +328,21 @@ def main(argv: list[str] | None = None) -> int:
             )
             return 2
 
+    # ---- frozen input integrity (fail closed, before any data is read) ----
+    # The manifests above only say "DATA FROZEN"; this proves the bytes about to
+    # be consumed are still the frozen bytes. It runs before build_event_frame,
+    # before any model fit, before any artifact and before any ledger row.
+    try:
+        input_integrity = verify_frozen_inputs(
+            raw_dir,
+            filings_manifest_path=filings_manifest_path,
+            prices_manifest_path=prices_manifest_path,
+            record=FROZEN_INPUTS,
+        )
+    except InputIntegrityError as exc:
+        print(f"ERROR: frozen input integrity check failed: {exc}", file=sys.stderr)
+        return 2
+
     periods_cfg = experiment["periods"]
     period_specs = {
         name: PeriodSpec(
@@ -344,14 +380,12 @@ def main(argv: list[str] | None = None) -> int:
         "skip_counts": skip_counts,
         "filings_dataset_id": dataset_ids.get("filings"),
         "filings_manifest_status": filings_status,
-        "filings_dataset_canonical_sha256": (filings_manifest.get("sha256") or {}).get(
-            "dataset_canonical"
-        ),
+        # Recomputed from the bytes on disk by the frozen-input gate rather than
+        # copied out of the manifest -- verify_frozen_inputs proves the two agree.
+        "filings_dataset_canonical_sha256": input_integrity["filings_canonical_recomputed"],
         "prices_dataset_id": dataset_ids.get("prices"),
         "prices_manifest_status": prices_status,
-        "prices_dataset_canonical_sha256": (prices_manifest.get("sha256") or {}).get(
-            "dataset_canonical"
-        ),
+        "prices_dataset_canonical_sha256": input_integrity["prices_canonical_recomputed"],
         "dictionary_dataset_id_config": dataset_ids.get("dictionary"),
         "dictionary_dataset_id_runtime": LM_DATASET_ID,
         "dictionary_dataset_id_matches": dataset_ids.get("dictionary") == LM_DATASET_ID,
@@ -396,13 +430,16 @@ def main(argv: list[str] | None = None) -> int:
             "config_sha256": hashlib.sha256(config_text.encode("utf-8")).hexdigest(),
             "branch": args.branch,
             "code_git_head": git_head,
+            "input_integrity": input_integrity,
             "corpus": corpus,
             "selection_max_session": FINAL_C_SELECTION_MAX_SESSION,
             "targets": selection_targets,
             "notes": (
-                "PRE-2025 final-C selection only. This mode produces no DEV, no 2024 "
-                "and no 2025 evaluation numbers; it exists so the reviewed selection "
-                "can be pasted into walk_forward.final_selected_c."
+                "PRE-2025 final-C selection only. This mode produces no ordinary DEV "
+                "period-study artifact, no ordinary 2024 period-study artifact and no "
+                "2025 artifact; it DOES compute and persist the pre-specified 2024 "
+                "validation log loss grid used to select the final C, so the reviewed "
+                "selection can be pasted into walk_forward.final_selected_c."
             ),
         }
         selection_path = results_dir / f"{experiment_id}_final_c_selection.json"
@@ -453,6 +490,7 @@ def main(argv: list[str] | None = None) -> int:
                 "code_git_head": git_head,
                 "target_name": target_name,
                 "period_selected": period_name,
+                "input_integrity": input_integrity,
                 "corpus": corpus,
                 "result": payload,
             }

@@ -27,6 +27,8 @@ import csv
 import hashlib
 import importlib.util
 import json
+import socket
+from collections.abc import Callable
 from pathlib import Path
 from types import ModuleType
 from typing import Any
@@ -37,6 +39,7 @@ import pandas_market_calendars as mcal
 import pytest
 import yaml
 
+from quant_sentiment.acquisition import canonical_dataset_hash
 from quant_sentiment.nyse_calendar import NyseCalendar
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -101,6 +104,11 @@ _MALFORMED_FINAL_C: dict[str, dict[str, Any]] = {
     },
 }
 
+# Sentinel for _build_fixture: use the canonical these fixture bytes actually
+# hash to. A literal string overrides it (negative tests); None omits the field.
+_RECOMPUTED: Any = object()
+FROZEN_AT = "2026-09-17T20:46:08Z"
+
 
 def _load_runner() -> ModuleType:
     spec = importlib.util.spec_from_file_location("run_historical_text_study_v2", RUNNER)
@@ -110,9 +118,14 @@ def _load_runner() -> ModuleType:
     return module
 
 
+# One module instance, shared by the `runner` fixture and by _build_fixture,
+# which installs the fixture-scale frozen-input record into it.
+_RUNNER = _load_runner()
+
+
 @pytest.fixture(scope="module")
 def runner() -> ModuleType:
-    return _load_runner()
+    return _RUNNER
 
 
 @pytest.fixture(scope="module")
@@ -195,8 +208,8 @@ def _build_fixture(
     *,
     filings_status: str = "DATA FROZEN",
     prices_status: str = "DATA FROZEN",
-    filings_canonical: str | None = "a" * 64,
-    prices_canonical: str | None = "b" * 64,
+    filings_canonical: Any = _RECOMPUTED,
+    prices_canonical: Any = _RECOMPUTED,
     config_status: str = "pre-registered",
     final_c: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
@@ -213,34 +226,93 @@ def _build_fixture(
         for offset, symbol in enumerate(SYMBOLS)
     }
 
+    # The fixture corpus is frozen for real: every recorded per-file hash and
+    # canonical hash is the one these bytes actually have, exactly as the real
+    # freeze leaves them. So the runner's byte-level gate is satisfied by
+    # construction, and a single mutated byte refuses (the integrity tests).
+    filings_file_hashes: dict[str, str] = {}
+    filing_rows = 0
+    for symbol in SYMBOLS:
+        index_path = filings_ds / "filings" / f"{symbol}_index.csv"
+        with index_path.open(encoding="utf-8", newline="") as handle:
+            for row in csv.DictReader(handle):
+                rel = str(row["text_relpath"])
+                filings_file_hashes[rel] = hashlib.sha256(
+                    (filings_ds / rel).read_bytes()
+                ).hexdigest()
+                filing_rows += 1
+    for symbol in SYMBOLS:
+        index_rel = f"filings/{symbol}_index.csv"
+        filings_file_hashes[index_rel] = hashlib.sha256(
+            (filings_ds / index_rel).read_bytes()
+        ).hexdigest()
+    filings_real_canonical = canonical_dataset_hash(filings_file_hashes)
+
+    price_row_counts: dict[str, int] = {}
+    prices_file_hashes: dict[str, str] = {}
+    for symbol in [*SYMBOLS, MARKET]:
+        price_path = prices_ds / f"{symbol}.csv"
+        with price_path.open(encoding="utf-8", newline="") as handle:
+            price_row_counts[symbol] = sum(1 for _ in csv.DictReader(handle))
+        prices_file_hashes[f"{symbol}.csv"] = hashlib.sha256(price_path.read_bytes()).hexdigest()
+    prices_real_canonical = canonical_dataset_hash(prices_file_hashes)
+
+    def _declared(chosen: Any, recomputed: str) -> str | None:
+        """Sentinel -> the recomputed hash; None -> record no canonical at all."""
+        if chosen is _RECOMPUTED:
+            return recomputed
+        return None if chosen is None else str(chosen)
+
+    filings_declared = _declared(filings_canonical, filings_real_canonical)
+    prices_declared = _declared(prices_canonical, prices_real_canonical)
+
     manifests = tmp_path / "data" / "manifests"
     manifests.mkdir(parents=True, exist_ok=True)
+    filings_manifest: dict[str, Any] = {
+        "dataset_id": FILINGS_DS,
+        "symbols": SYMBOLS,
+        "status": filings_status,
+        "freeze_timestamp_utc": FROZEN_AT,
+        "sha256": dict(filings_file_hashes),
+        "parameters": {
+            "text_n_files": filing_rows,
+            "truncation_count": 0,
+            "extraction_policy": "uncapped",
+            "text_max_chars": None,
+            "text_files_at_legacy_cap_200000": 0,
+        },
+    }
+    if filings_declared is not None:
+        filings_manifest["sha256"]["dataset_canonical"] = filings_declared
     (manifests / f"{FILINGS_DS}.json").write_text(
-        json.dumps(
-            {
-                "dataset_id": FILINGS_DS,
-                "status": filings_status,
-                "sha256": (
-                    {} if filings_canonical is None else {"dataset_canonical": filings_canonical}
-                ),
-                "freeze_timestamp_utc": None,
-            }
-        ),
-        encoding="utf-8",
+        json.dumps(filings_manifest), encoding="utf-8"
     )
-    (manifests / f"{PRICES_DS}.json").write_text(
-        json.dumps(
-            {
-                "dataset_id": PRICES_DS,
-                "status": prices_status,
-                "sha256": (
-                    {} if prices_canonical is None else {"dataset_canonical": prices_canonical}
-                ),
-                "freeze_timestamp_utc": None,
-            }
-        ),
-        encoding="utf-8",
-    )
+
+    prices_manifest: dict[str, Any] = {
+        "dataset_id": PRICES_DS,
+        "symbols": [*SYMBOLS, MARKET],
+        "status": prices_status,
+        "freeze_timestamp_utc": FROZEN_AT,
+        "sha256": dict(prices_file_hashes),
+        "row_counts": price_row_counts,
+    }
+    if prices_declared is not None:
+        prices_manifest["sha256"]["dataset_canonical"] = prices_declared
+    (manifests / f"{PRICES_DS}.json").write_text(json.dumps(prices_manifest), encoding="utf-8")
+
+    # The production record pins the real 12-issuer / 2,349-row snapshot, which a
+    # 2-issuer fixture cannot match; install the fixture-scale record instead.
+    fixture_record = {
+        "freeze_timestamp_utc": FROZEN_AT,
+        "filings_canonical": filings_real_canonical,
+        "filings_files": filing_rows + len(SYMBOLS),
+        "filings_text_files": filing_rows,
+        "filings_rows": filing_rows,
+        "issuers": len(SYMBOLS),
+        "prices_canonical": prices_real_canonical,
+        "price_csvs": len(SYMBOLS) + 1,
+    }
+    _RUNNER.__dict__["FROZEN_INPUTS"] = fixture_record
 
     # Derived from the REAL config so the runner is tested against the schema it
     # actually consumes: a dropped/renamed key in the config fails these tests.
@@ -271,6 +343,8 @@ def _build_fixture(
         "results": tmp_path / "results",
         "ledger": tmp_path / "ledger.csv",
         "n_filings": n_filings,
+        "manifests": manifests,
+        "frozen_inputs": fixture_record,
     }
 
 
@@ -326,8 +400,17 @@ def test_dev_and_validation_run_writes_artifacts_and_never_2025(
     assert payload["corpus"]["prices_dataset_id"] == PRICES_DS
     assert payload["corpus"]["filings_manifest_status"] == "DATA FROZEN"
     assert payload["corpus"]["prices_manifest_status"] == "DATA FROZEN"
-    assert payload["corpus"]["filings_dataset_canonical_sha256"] == "a" * 64
-    assert payload["corpus"]["prices_dataset_canonical_sha256"] == "b" * 64
+    # The corpus block reports the canonical RECOMPUTED from the bytes on disk by
+    # the frozen-input gate, not the value echoed out of the manifest.
+    integrity = payload["input_integrity"]
+    assert integrity["verified"] is True
+    assert integrity["verification_mode"] == "frozen_bytes_sha256"
+    assert payload["corpus"]["filings_dataset_canonical_sha256"] == (
+        integrity["filings_canonical_recomputed"]
+    )
+    assert payload["corpus"]["prices_dataset_canonical_sha256"] == (
+        integrity["prices_canonical_recomputed"]
+    )
     assert payload["corpus"]["n_frame_rows"] > 0
     assert payload["corpus"]["n_index_rows_not_ok"] == {}
     assert payload["corpus"]["dictionary_dataset_id_matches"] is True
@@ -567,6 +650,290 @@ def test_2025_runs_once_with_all_gates_satisfied_and_uses_the_frozen_c(
     assert payload["c_source"] == "frozen_config_final_selected_c"
     assert payload["historical_evaluation_label"] == "PREVIOUSLY INSPECTED / HISTORICAL EVALUATION"
     assert payload["corpus"]["filings_manifest_status"] == "DATA FROZEN"
+
+
+# ---------------------------------------------------------------------------
+# FINAL PRE-EMPIRICAL P1 GATE: the runner verifies the ACTUAL frozen bytes
+# ---------------------------------------------------------------------------
+
+
+def _assert_no_network(monkeypatch: pytest.MonkeyPatch) -> None:
+    def _blocked(*args: Any, **kwargs: Any) -> Any:
+        raise AssertionError("network access attempted during input verification")
+
+    monkeypatch.setattr(socket, "getaddrinfo", _blocked)
+    monkeypatch.setattr(socket, "create_connection", _blocked)
+    monkeypatch.setattr(socket.socket, "connect", _blocked)
+    monkeypatch.setattr(socket.socket, "connect_ex", _blocked)
+
+
+def _mutate_one_byte(path: Path) -> None:
+    """Change one byte in place: same length, same row count, different bytes."""
+    raw = bytearray(path.read_bytes())
+    assert raw, f"nothing to mutate in {path}"
+    raw[0] = ord("Y") if raw[0] != ord("Y") else ord("Z")
+    path.write_bytes(bytes(raw))
+
+
+# The three kinds of frozen input a real run consumes.
+_FROZEN_TARGETS: dict[str, Callable[[dict[str, Any]], Path]] = {
+    "filing_text": lambda fx: sorted(
+        (fx["raw"] / FILINGS_DS / "filings" / "text").rglob("*.txt")
+    )[0],
+    "filing_index_csv": lambda fx: fx["raw"] / FILINGS_DS / "filings" / f"{SYMBOLS[0]}_index.csv",
+    "price_csv": lambda fx: fx["raw"] / PRICES_DS / f"{SYMBOLS[0]}.csv",
+}
+
+
+def test_production_frozen_inputs_record_pins_the_real_snapshot() -> None:
+    """The shipped record must describe the real frozen snapshot.
+
+    Every other test here runs a fixture-scale record, so this is the one place
+    the production pin itself is held to account: a loosened count or a stale
+    hash fails here instead of quietly weakening every run.
+    """
+    record = _load_runner().FROZEN_INPUTS
+    assert record == {
+        "freeze_timestamp_utc": "2026-09-17T20:46:08Z",
+        "filings_canonical": "3b2941870391b8584afaad46417cf3e6a0fe03509238fc6ac21958bb4c90f7f4",
+        "filings_files": 2361,
+        "filings_text_files": 2349,
+        "filings_rows": 2349,
+        "issuers": 12,
+        "prices_canonical": "6ca6e433983fb5f629d084d0964229d5b9c91cbee0756f686598bea6c90d4cb2",
+        "price_csvs": 13,
+    }
+
+
+def test_valid_frozen_fixture_records_measured_input_integrity(
+    runner: ModuleType, tmp_path: Path, sessions: pd.DatetimeIndex, calendar: NyseCalendar
+) -> None:
+    """Test 1: a valid frozen fixture passes, and the artifact carries MEASURED
+    evidence -- counts and a canonical recomputed from the bytes on disk."""
+    fixture = _build_fixture(tmp_path, sessions, calendar)
+    assert runner.main(_argv(fixture)) == 0
+
+    payload = json.loads(
+        (fixture["results"] / "fx_text_study_primary_validation.json").read_text()
+    )
+    integrity = payload["input_integrity"]
+    record = fixture["frozen_inputs"]
+    assert integrity["verified"] is True
+    assert integrity["verification_mode"] == "frozen_bytes_sha256"
+    assert integrity["filings_issuers_verified"] == record["issuers"]
+    assert integrity["filings_files_verified"] == record["filings_files"]
+    assert integrity["filings_text_files_verified"] == record["filings_text_files"]
+    assert integrity["filings_index_rows_ok"] == record["filings_rows"]
+    assert integrity["prices_files_verified"] == record["price_csvs"]
+    assert integrity["filings_canonical_recomputed"] == record["filings_canonical"]
+    assert integrity["prices_canonical_recomputed"] == record["prices_canonical"]
+    # Recomputed independently here from the raw files, so the artifact provably
+    # carries a measured value rather than one copied out of the manifest.
+    dataset_dir = fixture["raw"] / FILINGS_DS
+    independently_hashed = {
+        str(path.relative_to(dataset_dir)): hashlib.sha256(path.read_bytes()).hexdigest()
+        for path in sorted(dataset_dir.rglob("*"))
+        if path.is_file()
+    }
+    assert integrity["filings_canonical_recomputed"] == canonical_dataset_hash(
+        independently_hashed
+    )
+    assert integrity["filings_manifest_sha256"] == hashlib.sha256(
+        (fixture["manifests"] / f"{FILINGS_DS}.json").read_bytes()
+    ).hexdigest()
+    assert integrity["prices_manifest_sha256"] == hashlib.sha256(
+        (fixture["manifests"] / f"{PRICES_DS}.json").read_bytes()
+    ).hexdigest()
+
+
+@pytest.mark.parametrize("target", sorted(_FROZEN_TARGETS))
+def test_one_mutated_frozen_byte_refuses_before_any_empirical_work(
+    runner: ModuleType,
+    tmp_path: Path,
+    sessions: pd.DatetimeIndex,
+    calendar: NyseCalendar,
+    capsys: pytest.CaptureFixture[str],
+    target: str,
+) -> None:
+    """Tests 2-4 and 8: one flipped byte in a filing text, a filing index CSV or
+    a price CSV refuses, for the integrity reason, creating no result artifact
+    and no ledger row."""
+    fixture = _build_fixture(tmp_path, sessions, calendar)
+    _mutate_one_byte(_FROZEN_TARGETS[target](fixture))
+
+    assert runner.main(_argv(fixture)) == 2
+    assert "frozen input integrity check failed" in capsys.readouterr().err
+    assert _artifacts(fixture) == []
+    assert not fixture["ledger"].exists()
+
+
+@pytest.mark.parametrize("target", sorted(_FROZEN_TARGETS))
+def test_missing_frozen_file_refuses_before_any_empirical_work(
+    runner: ModuleType,
+    tmp_path: Path,
+    sessions: pd.DatetimeIndex,
+    calendar: NyseCalendar,
+    capsys: pytest.CaptureFixture[str],
+    target: str,
+) -> None:
+    """Test 5: a frozen input no longer on disk refuses."""
+    fixture = _build_fixture(tmp_path, sessions, calendar)
+    _FROZEN_TARGETS[target](fixture).unlink()
+
+    assert runner.main(_argv(fixture)) == 2
+    assert "frozen input integrity check failed" in capsys.readouterr().err
+    assert _artifacts(fixture) == []
+    assert not fixture["ledger"].exists()
+
+
+@pytest.mark.parametrize("dataset_id", [FILINGS_DS, PRICES_DS])
+def test_manifest_recorded_per_file_hash_mismatch_refuses(
+    runner: ModuleType,
+    tmp_path: Path,
+    sessions: pd.DatetimeIndex,
+    calendar: NyseCalendar,
+    capsys: pytest.CaptureFixture[str],
+    dataset_id: str,
+) -> None:
+    """Test 6: a manifest per-file hash that disagrees with the bytes refuses."""
+    fixture = _build_fixture(tmp_path, sessions, calendar)
+    manifest_path = fixture["manifests"] / f"{dataset_id}.json"
+    manifest = json.loads(manifest_path.read_text())
+    key = next(k for k in manifest["sha256"] if k != "dataset_canonical")
+    manifest["sha256"][key] = "0" * 64
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    assert runner.main(_argv(fixture)) == 2
+    assert "frozen input integrity check failed" in capsys.readouterr().err
+    assert _artifacts(fixture) == []
+    assert not fixture["ledger"].exists()
+
+
+@pytest.mark.parametrize("dataset_id", [FILINGS_DS, PRICES_DS])
+def test_canonical_mismatch_against_the_frozen_record_refuses(
+    runner: ModuleType,
+    tmp_path: Path,
+    sessions: pd.DatetimeIndex,
+    calendar: NyseCalendar,
+    capsys: pytest.CaptureFixture[str],
+    dataset_id: str,
+) -> None:
+    """Test 7: the frozen record's canonical does not match the bytes."""
+    fixture = _build_fixture(tmp_path, sessions, calendar)
+    if dataset_id == FILINGS_DS:
+        fixture["frozen_inputs"]["filings_canonical"] = "0" * 64
+    else:
+        fixture["frozen_inputs"]["prices_canonical"] = "0" * 64
+
+    assert runner.main(_argv(fixture)) == 2
+    assert "frozen input integrity check failed" in capsys.readouterr().err
+    assert _artifacts(fixture) == []
+    assert not fixture["ledger"].exists()
+
+
+@pytest.mark.parametrize("dataset_id", [FILINGS_DS, PRICES_DS])
+def test_manifest_declared_canonical_mismatch_refuses(
+    runner: ModuleType,
+    tmp_path: Path,
+    sessions: pd.DatetimeIndex,
+    calendar: NyseCalendar,
+    capsys: pytest.CaptureFixture[str],
+    dataset_id: str,
+) -> None:
+    """Test 7: the manifest's own declared canonical does not match the bytes."""
+    fixture = _build_fixture(tmp_path, sessions, calendar)
+    manifest_path = fixture["manifests"] / f"{dataset_id}.json"
+    manifest = json.loads(manifest_path.read_text())
+    manifest["sha256"]["dataset_canonical"] = "0" * 64
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    assert runner.main(_argv(fixture)) == 2
+    assert "frozen input integrity check failed" in capsys.readouterr().err
+    assert _artifacts(fixture) == []
+    assert not fixture["ledger"].exists()
+
+
+@pytest.mark.parametrize("dataset_id", [FILINGS_DS, PRICES_DS])
+def test_re_frozen_manifest_refuses(
+    runner: ModuleType,
+    tmp_path: Path,
+    sessions: pd.DatetimeIndex,
+    calendar: NyseCalendar,
+    capsys: pytest.CaptureFixture[str],
+    dataset_id: str,
+) -> None:
+    """A later freeze stamp is a different snapshot, whatever its hashes say."""
+    fixture = _build_fixture(tmp_path, sessions, calendar)
+    manifest_path = fixture["manifests"] / f"{dataset_id}.json"
+    manifest = json.loads(manifest_path.read_text())
+    manifest["freeze_timestamp_utc"] = "2026-09-18T00:00:00Z"
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    assert runner.main(_argv(fixture)) == 2
+    assert "frozen input integrity check failed" in capsys.readouterr().err
+    assert _artifacts(fixture) == []
+
+
+def test_input_verification_makes_no_network_call(
+    runner: ModuleType,
+    tmp_path: Path,
+    sessions: pd.DatetimeIndex,
+    calendar: NyseCalendar,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test 9: the gate, and the run that passes through it, touch no socket."""
+    fixture = _build_fixture(tmp_path, sessions, calendar)
+    _assert_no_network(monkeypatch)
+    # If the blocker cannot fire, the run below would prove nothing.
+    with pytest.raises(AssertionError):
+        socket.create_connection(("example.invalid", 80))
+
+    assert runner.main(_argv(fixture)) == 0
+    assert _artifacts(fixture) != []
+
+
+_ENTRY_POINTS: dict[str, tuple[tuple[str, ...], dict[str, Any]]] = {
+    "dev_and_2024": ((), {}),
+    "select_final_c": (("--select-final-c",), {}),
+    "validation_only": (("--periods", "validation"), {}),
+    "historical_evaluation_2025": (
+        ("--periods", "historical_evaluation", "--allow-2025"),
+        {"config_status": "frozen-final", "final_c": FROZEN_C_BY_TARGET},
+    ),
+}
+
+
+@pytest.mark.parametrize("label", sorted(_ENTRY_POINTS))
+def test_every_entry_point_passes_through_the_same_integrity_gate(
+    runner: ModuleType,
+    tmp_path: Path,
+    sessions: pd.DatetimeIndex,
+    calendar: NyseCalendar,
+    capsys: pytest.CaptureFixture[str],
+    label: str,
+) -> None:
+    """Test 10: DEV/2024, 2024-only, --select-final-c and 2025 share ONE gate.
+   The control run of the same shape proves the entry point is otherwise
+   allowed through, so the refusal below is attributable to the mutated byte
+   rather than to a gate that refuses everything.
+    """
+    extra, kwargs = _ENTRY_POINTS[label]
+
+    control_root = tmp_path / "control"
+    control_root.mkdir()
+    control = _build_fixture(control_root, sessions, calendar, **kwargs)
+    assert runner.main(_argv(control, *extra)) == 0
+    capsys.readouterr()
+
+    mutated_root = tmp_path / "mutated"
+    mutated_root.mkdir()
+    mutated = _build_fixture(mutated_root, sessions, calendar, **kwargs)
+    _mutate_one_byte(_FROZEN_TARGETS["price_csv"](mutated))
+
+    assert runner.main(_argv(mutated, *extra)) == 2
+    assert "frozen input integrity check failed" in capsys.readouterr().err
+    assert _artifacts(mutated) == []
+    assert not mutated["ledger"].exists()
 
 
 def test_pure_pre_2025_run_cannot_produce_2025_numbers(
