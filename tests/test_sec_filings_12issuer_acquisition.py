@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import re
 import urllib.error
 from pathlib import Path
 from types import ModuleType
@@ -100,12 +101,15 @@ def _patch_network(
         call_state["symbol_index"] += 1
         return result
 
+    # Change D: the authoritative path sources its SEC contact from the
+    # environment (sec_http.user_agent() fails loudly when it is absent), so the
+    # offline fixture must supply one -- and never a hard-coded personal string.
+    monkeypatch.setenv("SEC_USER_AGENT", "Fixture Suite research fixtures@example.invalid")
     monkeypatch.setattr(acq, "fetch_company_filings", fake_fetch_company_filings)
     monkeypatch.setattr(acq, "_sec_get_text", fake_sec_get_text)
     monkeypatch.setattr(acq, "download_prices", fake_download_prices)
     monkeypatch.setattr(acq, "acquire_symbol_filings_raw", wrapped_acquire)
     monkeypatch.setattr(acq, "_repo_root", lambda: fake_root)
-    monkeypatch.setenv("SEC_USER_AGENT", "test-suite contact test@example.invalid")
 
 
 def test_freeze_refused_by_default_when_a_filing_fails(
@@ -148,32 +152,48 @@ def test_freeze_with_allow_partial_labels_status_explicitly(
     assert total_failed == 1
 
 
-def test_no_sec_user_agent_env_var_fails_clearly(
+def test_uncapped_extraction_is_not_truncated() -> None:
+    """max_chars=None must return the FULL text (the cap lift); the default still truncates."""
+    from quant_sentiment.edgar_text import html_to_plain_text
+
+    body = "<p>" + ("word " * 60_000) + "</p>"   # ~300k chars after whitespace collapse
+    assert len(html_to_plain_text(body, max_chars=None)) > 250_000
+    assert len(html_to_plain_text(body)) == 200_000        # default cap still enforced
+
+
+def test_manifest_provenance_and_uncapped_policy_are_recorded(
     acq: ModuleType, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    """Real defect found by Hai/Codex review: SEC_USER_AGENT was hard-coded
-    with a personal contact string. It must now come from the environment
-    and fail with a clear error (not a network error, not a silent
-    fallback) when unset."""
+    """Change F: the manifest must carry producing-script provenance, the
+    extraction policy as MEASURED truncation counts, per-file hashes and the
+    canonical dataset hash -- and must not carry a plaintext SEC contact."""
     _patch_network(monkeypatch, acq, tmp_path, fail_first=False)
-    monkeypatch.delenv("SEC_USER_AGENT", raising=False)
-    with pytest.raises(RuntimeError, match="SEC_USER_AGENT"):
-        acq.main([])
+    assert acq.main([]) == 0
+    manifest = json.loads(
+        (tmp_path / "data" / "manifests" / f"{acq.FILINGS_DATASET_ID}.json").read_text()
+    )
+    params = manifest["parameters"]
 
+    assert params["extraction_policy"] == "uncapped"
+    assert params["text_max_chars"] is None
+    assert params["truncation_count"] == 0
+    assert params["text_files_at_legacy_cap_200000"] == 0
+    assert params["text_n_files"] == sum(
+        s["filings_ok"] for s in manifest["filing_stats"].values()
+    )
 
-def test_manifest_records_acquisition_script_provenance(
-    acq: ModuleType, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    """Both manifests must record the acquisition script's own hash, so a
-    result can be traced back to the exact code that produced it."""
-    _patch_network(monkeypatch, acq, tmp_path, fail_first=False)
-    exit_code = acq.main([])
-    assert exit_code == 0
+    assert re.fullmatch(r"[0-9a-f]{64}", params["acquisition_script_sha256"])
+    assert params["acquisition_script"].endswith("acquire_sec_filings_12issuer_daily.py")
+    assert re.fullmatch(r"[0-9a-f]{64}", params["sec_user_agent_sha256"])
+    assert "sec_user_agent" not in params  # hash only -- no plaintext contact
+    assert "git_head" in params
 
-    filings_manifest_path = tmp_path / "data" / "manifests" / f"{acq.FILINGS_DATASET_ID}.json"
-    filings_manifest = json.loads(filings_manifest_path.read_text())
-    assert filings_manifest["acquisition_script_sha256"]
+    by_form = params["filing_counts_by_form"]
+    assert sum(by_form.values()) == params["filings_ok_total"]
+    assert params["filing_counts_by_issuer"]["AAPL"] == 2   # fixture: two filings, both OK
+    assert params["filings_failed_total"] == 0
 
-    prices_manifest_path = tmp_path / "data" / "manifests" / f"{acq.PRICES_DATASET_ID}.json"
-    prices_manifest = json.loads(prices_manifest_path.read_text())
-    assert prices_manifest["acquisition_script_sha256"]
+    hashes = manifest["sha256"]
+    assert hashes is not None
+    assert "dataset_canonical" in hashes
+    assert len([k for k in hashes if k.endswith(".txt")]) == params["text_n_files"]

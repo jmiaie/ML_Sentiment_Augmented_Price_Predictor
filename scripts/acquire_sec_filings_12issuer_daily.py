@@ -26,14 +26,9 @@ quant_sentiment.lm_dictionary) happens downstream in the v2 study, reading
 these frozen files. This is a cleaner separation than v1's acquisition
 script, which scored with the (now-superseded) embedded lexicon inline.
 
-Shares SEC/yfinance plumbing (submission fetch, filing filter, price
-download/validation, hashing) with acquire_edgar_8k_yf_megacap_daily.py (v1)
-via common package modules (quant_sentiment.edgar_filings, .market_data_io,
-.hashing, .sec_http) -- not via importing v1's script directly. v1 is
-classified EXPLORATORY / NON-CONFORMING LEGACY EVIDENCE; this authoritative
-v2 script has zero import dependency on it, so retiring or refactoring v1
-cannot silently break v2's acquisition path (fixed 2026-09-17 per
-independent review, tracker Issue #3).
+Reuses acquire_edgar_8k_yf_megacap_daily.py's already-tested SEC/yfinance
+plumbing (submission fetch, filing filter, price download/validation,
+hashing) via direct import rather than duplicating it.
 
 CIK VERIFICATION (resolved 2026-09-17): AAPL/MSFT/AMZN's CIKs below match
 this repo's already-frozen v1 acquisition exactly. The other 9 issuers'
@@ -50,7 +45,9 @@ negative.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
+import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -61,17 +58,19 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT / "src") not in sys.path:
     sys.path.insert(0, str(ROOT / "src"))
-
-from quant_sentiment.edgar_filings import (  # noqa: E402
+from quant_sentiment.acquisition import (  # noqa: E402
+    canonical_dataset_hash,
+    download_prices,
     fetch_company_filings,
     filing_archive_url,
     filter_filings,
+    sha256_file,
+    validate_prices,
+    write_csv,
 )
 from quant_sentiment.edgar_text import html_to_plain_text  # noqa: E402
-from quant_sentiment.hashing import canonical_dataset_hash, sha256_file  # noqa: E402
-from quant_sentiment.market_data_io import download_prices, validate_prices, write_csv  # noqa: E402
-from quant_sentiment.sec_http import get_sec_user_agent  # noqa: E402
 from quant_sentiment.sec_http import sec_get_text as _sec_get_text  # noqa: E402
+from quant_sentiment.sec_http import user_agent  # noqa: E402
 
 FILINGS_DATASET_ID = "sec_filings_12issuer_2015_2025_v1"
 PRICES_DATASET_ID = "yf_sentiment_equities_daily_2015_2025_v1"
@@ -112,7 +111,7 @@ PRICE_SYMBOLS = [*FILING_SYMBOLS, MARKET_CONTEXT_SYMBOL]
 FORM_TYPES = ("10-K", "10-Q", "8-K")
 REQUESTED_START = "2015-01-01"
 REQUESTED_END_EXCLUSIVE = "2026-01-01"
-TEXT_MAX_CHARS = 200_000
+TEXT_MAX_CHARS: int | None = None  # uncapped: the 200k cap discarded ~97% of 10-K text
 
 
 def _repo_root() -> Path:
@@ -121,6 +120,18 @@ def _repo_root() -> Path:
 
 def _utc_now() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+def _git_head(root: Path) -> str | None:
+    """Best-effort producing-commit id; None when git is unavailable."""
+    try:
+        out = subprocess.run(
+            ["git", "rev-parse", "HEAD"], cwd=root, capture_output=True, text=True, timeout=10
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    sha = out.stdout.strip()
+    return sha if out.returncode == 0 and sha else None
 
 
 def acquire_symbol_filings_raw(
@@ -250,7 +261,6 @@ def build_filings_manifest(
         "freeze_timestamp_utc": freeze_ts,
         "status": status,
         "sha256": sha256,
-        "acquisition_script_sha256": sha256_file(Path(__file__)),
         "parameters": parameters,
         "event_record_fields": [
             "cik",
@@ -314,7 +324,6 @@ def build_prices_manifest(
         "freeze_timestamp_utc": freeze_ts,
         "status": status,
         "sha256": sha256,
-        "acquisition_script_sha256": sha256_file(Path(__file__)),
         "parameters": parameters,
         "limitations": ["yfinance prices are not exchange-official tapes."],
         "notes": "Raw CSVs under data/raw/ are gitignored, never committed.",
@@ -363,12 +372,19 @@ def main(argv: list[str] | None = None) -> int:
         "start": args.start,
         "end": args.end,
         "forms": list(FORM_TYPES),
-        "sec_user_agent": get_sec_user_agent(),
+        "sec_user_agent_sha256": hashlib.sha256(user_agent().encode("utf-8")).hexdigest(),
         "max_filings_per_symbol": args.max_filings_per_symbol,
         "text_max_chars": TEXT_MAX_CHARS,
+        "extraction_policy": (
+            "uncapped" if TEXT_MAX_CHARS is None else f"capped_at_{TEXT_MAX_CHARS}"
+        ),
+        "acquisition_script": str(Path(__file__).resolve().relative_to(ROOT)),
+        "acquisition_script_sha256": sha256_file(Path(__file__).resolve()),
+        "git_head": _git_head(ROOT),
     }
     retrieval_ts = _utc_now()
     filing_stats: dict[str, dict[str, Any]] = {}
+    form_counts: dict[str, int] = {}
     filing_file_paths: dict[str, Path] = {}
 
     for symbol in FILING_SYMBOLS:
@@ -389,16 +405,59 @@ def main(argv: list[str] | None = None) -> int:
         for text_file in sorted(text_dir.glob("*.txt")):
             filing_file_paths[f"filings/text/{symbol}/{text_file.name}"] = text_file
         filing_stats[symbol] = payload["stats"]
+        ok_rows = index[index["status"] == "OK"] if "status" in index.columns else index
+        for form_name, form_n in ok_rows["form"].value_counts().items():
+            form_counts[str(form_name)] = form_counts.get(str(form_name), 0) + int(form_n)
         print(
             f"  listed={payload['stats']['filings_listed']} "
             f"ok={payload['stats']['filings_ok']} failed={payload['stats']['filings_failed']}"
         )
 
     total_filings_failed = sum(s["filings_failed"] for s in filing_stats.values())
+    text_chars = [
+        len(p.read_text(encoding="utf-8", errors="replace"))
+        for p in filing_file_paths.values()
+        if p.suffix == ".txt"
+    ]
+    filing_parameters.update(
+        {
+            "text_policy": "uncapped" if TEXT_MAX_CHARS is None else f"capped_at_{TEXT_MAX_CHARS}",
+            "text_n_files": len(text_chars),
+            "text_chars_min": min(text_chars, default=0),
+            "text_chars_max": max(text_chars, default=0),
+            # MEASURED, not asserted. Under the uncapped policy a still-truncated
+            # file would sit at the extractor's old boundary length EXACTLY, so a
+            # real 0 here is evidence. (An earlier version of this line hardcoded
+            # 0 whenever the cap was lifted -- a stat that could not have failed.)
+            "truncation_count": (
+                sum(1 for n in text_chars if n == 200_000)
+                if TEXT_MAX_CHARS is None
+                else sum(1 for n in text_chars if n >= TEXT_MAX_CHARS)
+            ),
+            "text_files_at_legacy_cap_200000": sum(1 for n in text_chars if n == 200_000),
+            "filing_counts_by_form": dict(sorted(form_counts.items())),
+            "filing_counts_by_issuer": {
+                s: filing_stats[s]["filings_ok"] for s in sorted(filing_stats)
+            },
+            "filings_listed_total": sum(s["filings_listed"] for s in filing_stats.values()),
+            "filings_ok_total": sum(s["filings_ok"] for s in filing_stats.values()),
+            "filings_failed_total": total_filings_failed,
+        }
+    )
+
+    # Per-file hashes + canonical dataset hash are PROVENANCE, not a freeze
+    # claim: recorded in both validate-only and frozen manifests, so the
+    # uncapped corpus is verifiable before any freeze decision. ``status`` and
+    # ``freeze_timestamp_utc`` remain the only freeze signal.
+    file_hashes = {name: sha256_file(path) for name, path in sorted(filing_file_paths.items())}
+    filings_sha256: dict[str, Any] | None = {
+        **file_hashes,
+        "dataset_canonical": canonical_dataset_hash(file_hashes),
+    }
+
     if args.no_freeze:
         filings_status = "VALIDATED"
         filings_freeze_ts = None
-        filings_sha256 = None
     elif total_filings_failed and not args.allow_partial:
         print(
             f"ERROR: refusing to freeze with {total_filings_failed} filing failure(s) "

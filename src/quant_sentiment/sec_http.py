@@ -10,13 +10,9 @@ retiring or refactoring it would silently break v2's acquisition path and
 its SEC rate-limit politeness. Moved into the package so both scripts (and
 any future one) depend on this module, not on each other.
 
-The user-agent contact string was originally a hard-coded personal email
-here. Per independent review (Hai/Codex, tracker Issue #3, 2026-09-17),
-authoritative v2 code must not embed personal contact information -- SEC's
-fair-access policy just requires *some* descriptive contact string, which
-now must be supplied by the caller's environment at runtime via the
-``SEC_USER_AGENT`` env var. Requests fail clearly (before any network call)
-if it is absent or blank, rather than silently falling back to a default.
+The User-Agent contact is supplied by the ``SEC_USER_AGENT`` environment
+variable at call time (SEC EDGAR requires a descriptive agent carrying a real
+contact). No personal contact string is hard-coded here.
 """
 
 from __future__ import annotations
@@ -31,24 +27,40 @@ from typing import Any
 SEC_SLEEP_SECONDS = 0.25
 
 
-def get_sec_user_agent() -> str:
+def user_agent() -> str:
+    """Return the SEC User-Agent, sourced from the environment at call time.
+
+    Fails loudly rather than sending a blank User-Agent to SEC (which invites
+    throttling/blocking) when the variable is missing or whitespace-only.
+    """
     value = os.environ.get("SEC_USER_AGENT", "").strip()
     if not value:
         raise RuntimeError(
-            "SEC_USER_AGENT environment variable must be set to a descriptive, "
-            "non-empty contact string (e.g. 'YourOrg SEC research contact@example.com') "
-            "before making SEC EDGAR requests, per SEC's fair-access policy "
-            "(https://www.sec.gov/os/webmaster-faq#developers). Refusing to fall "
-            "back to a hard-coded default."
+            "SEC_USER_AGENT is not set (or is blank). SEC EDGAR requires a "
+            "descriptive User-Agent carrying a real contact address, e.g.\n"
+            '  export SEC_USER_AGENT="Your Org research you@example.com"'
         )
     return value
+
+
+# Backwards-compatible alias for legacy (v1) callers that import this name:
+# scripts/acquire_edgar_8k_yf_megacap_daily.py and tests/test_sec_http.py, both
+# of which landed on main in parallel with this branch's own rename to
+# user_agent(). Same loud-failure behaviour, one name for both call styles.
+get_sec_user_agent = user_agent
+
+
+# Deprecated: legacy (v1) callers import this name for their manifest record.
+# It is no longer a hard-coded contact string, and authoritative v2 code must
+# call user_agent() instead so a missing environment value fails loudly.
+SEC_USER_AGENT = os.environ.get("SEC_USER_AGENT", "").strip()
 
 
 def sec_get(url: str) -> bytes:
     request = urllib.request.Request(
         url,
         headers={
-            "User-Agent": get_sec_user_agent(),
+            "User-Agent": user_agent(),
             "Accept-Encoding": "identity",
             "Host": urllib.parse.urlparse(url).netloc,
         },

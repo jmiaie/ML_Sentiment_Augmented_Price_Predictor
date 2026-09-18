@@ -7,10 +7,20 @@ Description-Content-Type: text/markdown
 Requires-Dist: numpy>=2.1.1
 Requires-Dist: pandas>=2.2.2
 Requires-Dist: scikit-learn>=1.5.2
+Requires-Dist: pandas-market-calendars>=4.4.1
+Requires-Dist: pysentiment2>=0.1.1
 Provides-Extra: dev
 Requires-Dist: mypy>=1.11.2; extra == "dev"
 Requires-Dist: pytest>=8.3.3; extra == "dev"
 Requires-Dist: ruff>=0.6.9; extra == "dev"
+Requires-Dist: pyyaml>=6.0.2; extra == "dev"
+Requires-Dist: beautifulsoup4>=4.12.3; extra == "dev"
+Requires-Dist: lxml>=5.3.0; extra == "dev"
+Provides-Extra: data
+Requires-Dist: yfinance==1.7.0; extra == "data"
+Requires-Dist: beautifulsoup4>=4.12.3; extra == "data"
+Requires-Dist: lxml>=5.3.0; extra == "data"
+Requires-Dist: pyyaml>=6.0.2; extra == "data"
 
 # ML_Sentiment_Augmented_Price_Predictor
 
@@ -25,7 +35,11 @@ The current implementation is intentionally modest and reproducible:
 - no claims of historical sentiment alpha
 - deterministic synthetic workflows for methodology validation
 
-Historical results pending reproducible point-in-time dataset.
+Historical D9 study (branch `research/historical-text-validation`, merged to `main` 2026-09-18 via PR #4, merge commit `0cafe8e`):
+reproducible megacap EDGAR 8-K subset + yfinance prices with PIT lexicon scores.
+See `research/holdout-audit.md`, `data/manifests/`, and `results/historical_text/`.
+Synthetic methodology artifacts remain non-substitutes for historical claims.
+
 
 ## Scope
 

@@ -93,6 +93,24 @@ class NyseCalendar:
             )
         return _to_date(later[0])
 
+    def last_session_on_or_before(self, day: date) -> date:
+        """The last NYSE session on or before ``day`` (``day`` itself when it
+        already is a session).
+
+        Turns a period's calendar end date into a real session boundary:
+        2023-12-31 is a Sunday, so the last 2023 session is 2023-12-29. Used
+        to bound forward target windows by the period they close in instead
+        of approximating with calendar-day arithmetic.
+        """
+        ts = pd.Timestamp(day).normalize()
+        pos = int(self._sessions.searchsorted(ts, side="right")) - 1
+        if pos < 0:
+            raise ValueError(
+                f"No NYSE session on or before {day} within schedule range "
+                f"starting {self.schedule_start}"
+            )
+        return _to_date(self._sessions[pos])
+
     def resolve_effective_session(self, acceptance_timestamp: datetime) -> date:
         """Map a filing's SEC EDGAR acceptance timestamp to the NYSE
         trading session as of whose close the filing is considered

@@ -1,0 +1,242 @@
+{
+  "branch": "research/d9d-cap-lift",
+  "code_git_head": "e55cb09e8367053c24270743e8b8d96f5fe1e375",
+  "config_path": "configs/experiments/sentiment_historical_text_study_v2.yaml",
+  "config_sha256": "b6d30af3da4161a01dd63a131e28b87294a6e408a0ef4b74058a9014200d68bd",
+  "config_status": "pre-registered",
+  "corpus": {
+    "counts_by_form": {
+      "10-K": 124,
+      "10-Q": 391,
+      "8-K": 1781
+    },
+    "dictionary_dataset_id_config": "lm_master_dictionary_2026_v1",
+    "dictionary_dataset_id_matches": true,
+    "dictionary_dataset_id_runtime": "lm_master_dictionary_2026_v1",
+    "filings_dataset_canonical_sha256": "3b2941870391b8584afaad46417cf3e6a0fe03509238fc6ac21958bb4c90f7f4",
+    "filings_dataset_id": "sec_filings_12issuer_2015_2025_v1",
+    "filings_manifest_status": "DATA FROZEN",
+    "frame_first_session": "2015-04-02",
+    "frame_last_session": "2025-12-15",
+    "n_filing_events_read": 2349,
+    "n_frame_rows": 2296,
+    "n_index_rows_not_ok": {},
+    "n_issuers_in_frame": 12,
+    "prices_dataset_canonical_sha256": "6ca6e433983fb5f629d084d0964229d5b9c91cbee0756f686598bea6c90d4cb2",
+    "prices_dataset_id": "yf_sentiment_equities_daily_2015_2025_v1",
+    "prices_manifest_status": "DATA FROZEN",
+    "skip_counts": {
+      "duplicate_accession": 0,
+      "empty_text": 0,
+      "insufficient_forward_window": 1,
+      "insufficient_market_history": 52,
+      "no_price_session": 0
+    }
+  },
+  "dataset_ids": {
+    "dictionary": "lm_master_dictionary_2026_v1",
+    "filings": "sec_filings_12issuer_2015_2025_v1",
+    "prices": "yf_sentiment_equities_daily_2015_2025_v1"
+  },
+  "experiment_id": "sentiment_hist_text_v2",
+  "input_integrity": {
+    "filings_canonical_recomputed": "3b2941870391b8584afaad46417cf3e6a0fe03509238fc6ac21958bb4c90f7f4",
+    "filings_files_verified": 2361,
+    "filings_index_rows_ok": 2349,
+    "filings_issuers_verified": 12,
+    "filings_manifest_sha256": "9ad504c9335fb7fafc2f1722bdcd33347bcb034c02013f1fafbb329e3ad6a6cc",
+    "filings_text_files_verified": 2349,
+    "frozen_record_freeze_timestamp_utc": "2026-09-17T20:46:08Z",
+    "prices_canonical_recomputed": "6ca6e433983fb5f629d084d0964229d5b9c91cbee0756f686598bea6c90d4cb2",
+    "prices_files_verified": 13,
+    "prices_manifest_sha256": "32c0f47c61c67601775ff3be3747b6ec4e62626fc6e805a1dc1731498a4bacc4",
+    "verification_mode": "frozen_bytes_sha256",
+    "verified": true
+  },
+  "notes": "PRE-2025 final-C selection only. This mode produces no ordinary DEV period-study artifact, no ordinary 2024 period-study artifact and no 2025 artifact; it DOES compute and persist the pre-specified 2024 validation log loss grid used to select the final C, so the reviewed selection can be pasted into walk_forward.final_selected_c.",
+  "selection_max_session": "2024-12-31",
+  "targets": {
+    "primary": {
+      "c_grid": [
+        0.01,
+        0.1,
+        1.0,
+        10.0
+      ],
+      "formation_period": {
+        "end_inclusive": "2023-12-31",
+        "name": "formation_dev",
+        "start": "2015-01-01"
+      },
+      "n_formation_rows": 1889,
+      "n_pre_2025_train_rows": 1889,
+      "n_validation_rows": 210,
+      "notes": "C selected on pre-2025 evidence only (purged formation train -> 2024 validation); the selected values are frozen into the experiment config and read verbatim by the 2025 evaluation run.",
+      "pre_evaluation_training": {
+        "embargo_sessions": 1,
+        "first_eval_effective_session": "2024-01-05",
+        "first_eval_effective_session_ordinal": 3525,
+        "n_history_rows": 2296,
+        "n_train_rows": 1889,
+        "purge_cutoff_ordinal": 3524,
+        "purge_cutoff_session": "2024-01-04",
+        "target_column": "primary_direction",
+        "train_end_session": "2023-12-13",
+        "train_row_index_sha256": "2de499cffa6b41a467d511be91e903759976fb296d26174f556e56ae1c365ff0",
+        "train_start_session": "2015-04-02",
+        "train_target_end_max_ordinal": 3511
+      },
+      "selected_c": {
+        "model0_majority_baseline": null,
+        "model1_market_only": 0.01,
+        "model2_text_only": 0.01,
+        "model3_market_text_combined": 0.01
+      },
+      "selection_max_session": "2024-12-31",
+      "target_column": "primary_direction",
+      "target_window_slicing": {
+        "formation": {
+          "n_effective_session_in_period": 1889,
+          "n_excluded_missing_target_end": 0,
+          "n_excluded_target_window_crossing": 0,
+          "n_included": 1889,
+          "n_rows_in_frame": 2296,
+          "period": "formation_dev",
+          "period_last_session": "2023-12-29",
+          "period_last_session_ordinal": 3521,
+          "target_column": "primary_direction"
+        },
+        "validation": {
+          "n_effective_session_in_period": 210,
+          "n_excluded_missing_target_end": 0,
+          "n_excluded_target_window_crossing": 0,
+          "n_included": 210,
+          "n_rows_in_frame": 2296,
+          "period": "validation",
+          "period_last_session": "2024-12-31",
+          "period_last_session_ordinal": 3773,
+          "target_column": "primary_direction"
+        }
+      },
+      "tie_break": "smallest_c",
+      "validation_embargo_sessions": 1,
+      "validation_log_loss_by_model_and_c": {
+        "model0_majority_baseline": {},
+        "model1_market_only": {
+          "0.01": 0.694838538719783,
+          "0.1": 0.696800467716786,
+          "1.0": 0.6972545008188539,
+          "10.0": 0.6973070326911874
+        },
+        "model2_text_only": {
+          "0.01": 0.6964131238580191,
+          "0.1": 0.6973012673456719,
+          "1.0": 0.6974086496389897,
+          "10.0": 0.6974196140837652
+        },
+        "model3_market_text_combined": {
+          "0.01": 0.6988917619649918,
+          "0.1": 0.7016452350252925,
+          "1.0": 0.7021666301798275,
+          "10.0": 0.7022246576159833
+        }
+      },
+      "validation_period": {
+        "end_inclusive": "2024-12-31",
+        "name": "validation",
+        "start": "2024-01-01"
+      }
+    },
+    "secondary": {
+      "c_grid": [
+        0.01,
+        0.1,
+        1.0,
+        10.0
+      ],
+      "formation_period": {
+        "end_inclusive": "2023-12-31",
+        "name": "formation_dev",
+        "start": "2015-01-01"
+      },
+      "n_formation_rows": 1889,
+      "n_pre_2025_train_rows": 1889,
+      "n_validation_rows": 210,
+      "notes": "C selected on pre-2025 evidence only (purged formation train -> 2024 validation); the selected values are frozen into the experiment config and read verbatim by the 2025 evaluation run.",
+      "pre_evaluation_training": {
+        "embargo_sessions": 5,
+        "first_eval_effective_session": "2024-01-05",
+        "first_eval_effective_session_ordinal": 3525,
+        "n_history_rows": 2296,
+        "n_train_rows": 1889,
+        "purge_cutoff_ordinal": 3520,
+        "purge_cutoff_session": "2023-12-28",
+        "target_column": "secondary_direction",
+        "train_end_session": "2023-12-13",
+        "train_row_index_sha256": "2de499cffa6b41a467d511be91e903759976fb296d26174f556e56ae1c365ff0",
+        "train_start_session": "2015-04-02",
+        "train_target_end_max_ordinal": 3515
+      },
+      "selected_c": {
+        "model0_majority_baseline": null,
+        "model1_market_only": 0.01,
+        "model2_text_only": 0.01,
+        "model3_market_text_combined": 0.01
+      },
+      "selection_max_session": "2024-12-31",
+      "target_column": "secondary_direction",
+      "target_window_slicing": {
+        "formation": {
+          "n_effective_session_in_period": 1889,
+          "n_excluded_missing_target_end": 0,
+          "n_excluded_target_window_crossing": 0,
+          "n_included": 1889,
+          "n_rows_in_frame": 2296,
+          "period": "formation_dev",
+          "period_last_session": "2023-12-29",
+          "period_last_session_ordinal": 3521,
+          "target_column": "secondary_direction"
+        },
+        "validation": {
+          "n_effective_session_in_period": 210,
+          "n_excluded_missing_target_end": 0,
+          "n_excluded_target_window_crossing": 0,
+          "n_included": 210,
+          "n_rows_in_frame": 2296,
+          "period": "validation",
+          "period_last_session": "2024-12-31",
+          "period_last_session_ordinal": 3773,
+          "target_column": "secondary_direction"
+        }
+      },
+      "tie_break": "smallest_c",
+      "validation_embargo_sessions": 5,
+      "validation_log_loss_by_model_and_c": {
+        "model0_majority_baseline": {},
+        "model1_market_only": {
+          "0.01": 0.6951570918568446,
+          "0.1": 0.698731643508731,
+          "1.0": 0.6994788569468161,
+          "10.0": 0.6995635463038428
+        },
+        "model2_text_only": {
+          "0.01": 0.6961090333743692,
+          "0.1": 0.6972145461082511,
+          "1.0": 0.6973738903106556,
+          "10.0": 0.6973906287955097
+        },
+        "model3_market_text_combined": {
+          "0.01": 0.6991595241588685,
+          "0.1": 0.7038099479509585,
+          "1.0": 0.7047024791733333,
+          "10.0": 0.7048041060936187
+        }
+      },
+      "validation_period": {
+        "end_inclusive": "2024-12-31",
+        "name": "validation",
+        "start": "2024-01-01"
+      }
+    }
+  }
+}
