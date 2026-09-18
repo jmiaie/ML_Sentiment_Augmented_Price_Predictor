@@ -50,7 +50,7 @@
 # 2026 (reserved program-wide).
 
 experiment_id: sentiment_hist_text_v2
-status: pre-registered
+status: frozen-final
 directive: 9
 dataset_ids:
   filings: sec_filings_12issuer_2015_2025_v1
@@ -163,8 +163,16 @@ walk_forward:
   # argmin -- that grid IS the model-selection evidence this file is populated
   # from, and it is pre-2025-only by construction.
   final_selected_c:
-    primary: null
-    secondary: null
+    primary:
+      model0_majority_baseline: null
+      model1_market_only: 0.01
+      model2_text_only: 0.01
+      model3_market_text_combined: 0.01
+    secondary:
+      model0_majority_baseline: null
+      model1_market_only: 0.01
+      model2_text_only: 0.01
+      model3_market_text_combined: 0.01
 
 confirmatory_models:
   model0_majority_baseline: unconditional majority-class baseline
@@ -254,6 +262,27 @@ status_history:
       manifest edit, no re-acquisition. Superseded prose that still said both
       manifests "remain VALIDATED" / "deliberately NOT frozen" has been
       corrected above.
+  - utc: "2026-09-18T01:30:42Z"
+    event: pre-2025 evidence reviewed and ACCEPTED; final C frozen (status pre-registered -> frozen-final)
+    note: >
+      Independent review of the pre-2025 empirical evidence returned P0=0 / P1=0 and
+      ACCEPTED it: EVIDENCE COMMIT aa176ddac213996a80768a538dc1afe000846609, PRODUCING
+      CODE e55cb09e8367053c24270743e8b8d96f5fe1e375. Reviewed: the real DEV internal OOS
+      run, the real 2024 validation run, and the final-C selection. The final C values
+      below are copied verbatim from the reviewed source selection artifact
+      results/historical_text_v2/sentiment_hist_text_v2_final_c_selection.json (sha256
+      725f8787b71a866a483abf8f567c09216e9af942c2aa3fa6672d03c026adab6f). Both targets
+      selected C=0.01 for Models 1/2/3 (model1_market_only, model2_text_only,
+      model3_market_text_combined); Model 0 (majority baseline) remains null. NO 2025 data
+      was used in the selection (selection_max_session 2024-12-31). C=0.01 sits at the
+      lower edge of the pre-registered grid [0.01, 0.1, 1.0, 10.0] and is recorded as a
+      disclosure/limitation, NOT permission for post-hoc tuning: the grid was not
+      expanded, no new C was searched, and no alternative regularization value or metric
+      was chosen. The 2025 period remains PREVIOUSLY INSPECTED / HISTORICAL EVALUATION,
+      never an untouched final holdout. Superseded prose in this file that still reads
+      PRE-REGISTERED / final configuration not frozen yet is a known documentation
+      inconsistency flagged to the owner for a wording-only correction; no methodology,
+      universe, feature, target, horizon, embargo, grid or model definition was altered.
 
 notes: >
   This is not a claim that point-in-time text adds predictive value --
