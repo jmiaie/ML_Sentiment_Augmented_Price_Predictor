@@ -1,0 +1,52 @@
+name: publication-pack
+
+# Offline, fail-closed verification of the D10-D publication pack.
+# No network use at any step: the pack is publication/communication over
+# accepted evidence only, and this workflow re-verifies that claim.
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # hashcheck resolves declared git objects with `git cat-file`, so a
+          # shallow clone would make the check fail closed. Full history is
+          # required for the pack to be verifiable at all.
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Fail closed on shallow history
+        run: |
+          if [ "$(git rev-parse --is-shallow-repository)" = "true" ]; then
+            echo "shallow clone: declared git SHAs cannot be resolved" >&2
+            exit 1
+          fi
+
+      - name: Rebuild the pack deterministically
+        run: python3 publication/sentiment-study/scripts/publication_pack.py build
+
+      - name: Generated tables and figures must be byte-stable
+        run: |
+          git diff --exit-code -- \
+            publication/sentiment-study/tables \
+            publication/sentiment-study/figures
+
+      - name: Verify D10-D publication pack (offline, fail-closed)
+        run: python3 publication/sentiment-study/scripts/publication_pack.py check
+
+      - name: Hash-integrity check (offline, fail-closed)
+        run: python3 publication/sentiment-study/scripts/publication_pack.py hashcheck
+
+      - name: Overclaim guard negative tests (a gate that cannot fail is not a gate)
+        run: python3 publication/sentiment-study/scripts/claim_crosscheck.py --selftest
+
+      - name: Independent claim cross-check (offline, fail-closed)
+        run: python3 publication/sentiment-study/scripts/claim_crosscheck.py
