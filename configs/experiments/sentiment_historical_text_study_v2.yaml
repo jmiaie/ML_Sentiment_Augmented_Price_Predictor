@@ -1,18 +1,16 @@
 # Sentiment/textual-signal historical validation (D9-D) — AUTHORITATIVE v2
-# Status: pre-registered (methodology only -- see "Execution status" below).
-# Was briefly (and incorrectly) marked frozen-for-holdout on creation, before
-# any real data existed to run DEV/2024 validation against. Corrected
-# 2026-09-17 per independent review (Hai/Codex, tracker Issue #3): the real
-# D9-D chronology is pre-register -> acquire/freeze datasets -> run DEV ->
-# run 2024 validation -> independent review of that evidence ->
-# frozen-for-holdout (only then, with holdout_authorization populated below)
-# -> run 2025 once. Note this config's status string is NOT what gates 2025
-# access in code -- historical_text_study_v2.run_period_study's own
-# allow_holdout parameter is the actual gate, and nothing currently calls it
-# with allow_holdout=True, so this mislabeling never authorized a live 2025
-# run. It is fixed anyway because the label itself must not overstate the
-# study's real progress, and the eventual v2 runner script will read this
-# status field to decide whether to permit --allow-2025.
+# Status: FROZEN-FINAL.
+#
+# The methodology was pre-registered from Directive #9 before the authoritative
+# v2 empirical runs. DEV internal OOS and 2024 validation are complete and
+# independently reviewed. The final per-target C values were selected from the
+# pre-specified 2024 validation grid and frozen before the single 2025
+# historical evaluation.
+#
+# The FINAL CONFIGURATION is now frozen. The 2025 period remains labeled
+# PREVIOUSLY INSPECTED / HISTORICAL EVALUATION because AAPL/MSFT/AMZN 2025
+# outcomes had already been inspected under the preserved non-conforming v1
+# study. No authoritative v2 2025 evaluation has yet been executed.
 #
 # Supersedes sentiment_historical_text_study_v1.yaml, which Directive #9 itself
 # labels EXPLORATORY / NON-CONFORMING TO FINAL D9-D (3 issuers, 8-K only,
@@ -23,17 +21,40 @@
 #
 # Methodology here (universe, features, targets, models, C grid, embargo) is
 # taken directly from Directive #9's own D9-D spec text -- none of it was
-# derived from or tuned against any observed result, so this config is frozen
-# on creation, matching D9-C's own precedent in this program.
+# derived from or tuned against any observed result, so the METHODOLOGY was
+# PRE-REGISTERED before the authoritative v2 empirical runs. (The earlier
+# "frozen on creation" wording was wrong and is corrected: pre-registration is
+# not a freeze.) The FINAL CONFIGURATION is now FROZEN: the per-target final C
+# values were written into walk_forward.final_selected_c from the reviewed
+# pre-2025 selection, immediately before the single 2025 historical
+# evaluation. See "CHRONOLOGY" and status_history below.
 #
-# EXECUTION STATUS (2026-09-17): code + tests are complete and pass on
-# synthetic fixtures (tests/test_nyse_calendar.py, test_lm_dictionary.py,
-# test_market_features_v2.py, test_walk_forward_v2.py, test_event_frame_v2.py,
-# test_historical_text_study_v2.py). The 12-issuer SEC EDGAR 10-K/10-Q/8-K
-# corpus has NOT been acquired -- this session's egress proxy blocks
-# data.sec.gov and www.sec.gov (confirmed, 403). See
-# docs/D9_D_ACQUISITION_HANDOFF.md for the network-capable handoff needed
-# before formation_dev/validation/historical_evaluation can actually run.
+# EXECUTION STATUS (2026-09-17, MEASURED -- supersedes the earlier "corpus has
+# NOT been acquired / egress proxy blocks SEC" note, which was a session-local
+# proxy artifact, not an environment fact): the 12-issuer SEC EDGAR 10-K/10-Q/8-K
+# corpus IS acquired -- 2,349 filings, 12/12 issuers, zero acquisition failures,
+# UNCAPPED text (max 1,565,337 chars; 0 files at the legacy 200,000-char
+# boundary). Both authoritative input datasets are FROZEN: the filings and
+# prices manifests are status DATA FROZEN with freeze_timestamp_utc
+# 2026-09-17T20:46:08Z, frozen by scripts/freeze_d9d_snapshot.py under commit
+# 869db9048fd938080669894358aa84bf7d30e557 (filings canonical
+# 3b2941870391b8584afaad46417cf3e6a0fe03509238fc6ac21958bb4c90f7f4, prices
+# canonical 6ca6e433983fb5f629d084d0964229d5b9c91cbee0756f686598bea6c90d4cb2).
+# That frozen pair is immutable input evidence. Code + tests pass on synthetic
+# fixtures, and the dedicated authoritative runner
+# scripts/run_historical_text_study_v2.py is fixture-tested end to end without
+# network access.
+#
+# CHRONOLOGY (corrected 2026-09-17 -- the earlier freeze record was premature
+# and is removed; it asserted a methodology freeze while no pre-2025 evidence
+# existed, inverting the required order):
+#   pre-register (this file) -> acquire + freeze corpus -> DEV ->
+#   2024 validation -> select final C -> write final_selected_c here ->
+#   freeze config -> gate 2025 exactly once as HISTORICAL EVALUATION.
+# Every step through "freeze config" is DONE (final freeze commit
+# 852761753af2aa72abf477fc3961629c5a496d17, parent
+# aa176ddac213996a80768a538dc1afe000846609); the 2025 gate is the only
+# remaining step and has NOT been executed.
 #
 # IMPORTANT HOLDOUT CLASSIFICATION (per Directive #9's own D9-D spec text):
 # the existing v1 study already inspected 2025 outcomes for AAPL/MSFT/AMZN,
@@ -44,7 +65,7 @@
 # 2026 (reserved program-wide).
 
 experiment_id: sentiment_hist_text_v2
-status: pre-registered
+status: frozen-final
 directive: 9
 dataset_ids:
   filings: sec_filings_12issuer_2015_2025_v1
@@ -132,6 +153,41 @@ walk_forward:
   formation_internal_test_size: 20
   step_size: 20
   c_values: [0.01, 0.1, 1.0, 10.0]
+  # Pre-2025-selected final C, PER TARGET, one entry per model, written here
+  # ONLY after DEV + 2024 validation have been reviewed. Each target carries its
+  # own dictionary because the 1-session and 5-session targets have different
+  # horizons and embargoes and their C is selected independently -- one shared
+  # dictionary would silently apply the primary target's C to the secondary.
+  # The 2025 historical evaluation refuses to start unless every logistic model
+  # has a value for BOTH targets, and never re-selects C on 2025 data
+  # (constraints.no_retune_after_freeze). model0 is the majority/unconditional
+  # baseline and has no C. null = not yet selected.
+  # Null until a reviewed DEV + 2024 selection has run. Populate with the block
+  # printed by `scripts/run_historical_text_study_v2.py --select-final-c`, which
+  # selects on purged-formation train -> 2024 validation ONLY (never 2025) and
+  # is frozen before the 2025 HISTORICAL EVALUATION reads it verbatim. A target
+  # is usable only once all three logistic models carry a selected value;
+  # model0_majority_baseline is the baseline and is always null.
+  #
+  # What --select-final-c does and does NOT produce (clarified -- the earlier
+  # wording "runs no period study" was misleading): it writes NO ordinary
+  # DEV / 2024-validation / 2025 period-study result artifacts (no
+  # *_dev_formation.json, no *_val_2024.json, no *_holdout_2025.json, no
+  # per-model period metrics). It DOES compute the pre-specified 2024 validation
+  # log loss for all four C candidates, per model and per target, and report the
+  # argmin -- that grid IS the model-selection evidence this file is populated
+  # from, and it is pre-2025-only by construction.
+  final_selected_c:
+    primary:
+      model0_majority_baseline: null
+      model1_market_only: 0.01
+      model2_text_only: 0.01
+      model3_market_text_combined: 0.01
+    secondary:
+      model0_majority_baseline: null
+      model1_market_only: 0.01
+      model2_text_only: 0.01
+      model3_market_text_combined: 0.01
 
 confirmatory_models:
   model0_majority_baseline: unconditional majority-class baseline
@@ -178,30 +234,70 @@ constraints:
   no_ci_network_fetch: true
   no_2026_use_yet: true
 
-pre_registration_record:
-  pre_registered_utc: "2026-09-17T00:00:00Z"
-  basis: >
-    Methodology (universe, features, targets, models, C grid, embargo) taken
-    directly from Directive #9's own D9-D spec text, not derived from or
-    tuned against any observed result -- fixed on creation. Real 12-issuer
-    acquisition is a separate, pending step (see docs/D9_D_ACQUISITION_HANDOFF.md).
-    This record fixes METHODOLOGY only; it is not a holdout-access
-    authorization -- see holdout_authorization below.
-
-holdout_authorization:
-  authorized: false
-  authorized_utc: null
-  reviewer: null
-  basis: null
-  note: >
-    Must remain false (status must remain pre-registered) until: datasets are
-    acquired and frozen with zero filing failures; formation_dev (2015-2023)
-    and validation (2024) have both been executed and their results
-    independently reviewed; and that review confirms no part of the 2015-2024
-    evidence or its review process touched 2025 data. Only then does status
-    become frozen-for-holdout, this block's authorized/authorized_utc/
-    reviewer/basis fields get populated, and a 2025 historical_evaluation run
-    is permitted (once, per constraints.no_retune_after_freeze).
+status_history:
+  - utc: "2026-09-17T00:00:00Z"
+    event: methodology authored from Directive #9's own D9-D spec text
+    note: >
+      Universe, features, targets, models, C grid and embargo all come from the
+      spec text; none of it was derived from or tuned against any observed
+      result.
+  - utc: "2026-09-17T18:00:00Z"
+    event: status corrected frozen-for-holdout -> pre-registered
+    note: >
+      The earlier freeze record was premature and has been removed: it asserted a
+      methodology freeze while no pre-2025 evidence existed yet, inverting the
+      required chronology. No v2 2025 result exists and none was produced.
+  - utc: "2026-09-17T20:30:00Z"
+    event: final_selected_c restructured to per-target; corpus freeze made zero-network
+    note: >
+      Independent review required three corrections before the data-freeze gate.
+      (1) Freezing is now a separate zero-network operation
+      (scripts/freeze_d9d_snapshot.py) that verifies and flips the existing local
+      bytes instead of re-downloading; the acquisition script's own freeze path is
+      no longer used to freeze the authoritative snapshot. (2) The authoritative
+      runner now requires BOTH the filings and the prices manifests to be DATA
+      FROZEN with a canonical dataset hash before ANY real run, not just the 2025
+      historical evaluation. (3) final_selected_c is now keyed per target
+      (primary/secondary) and is produced by select_final_c_on_validation, which
+      selects on purged-formation train -> 2024 validation and refuses any
+      validation window ending after 2024-12-31. The obsolete "truncated at 200k
+      chars" limitation in the filings manifest was also corrected to the measured
+      uncapped-extraction fact. No DEV, 2024 or 2025 number was produced by any of
+      this, and both manifests remain VALIDATED with freeze_timestamp_utc: null.
+  - utc: "2026-09-17T20:46:08Z"
+    event: both authoritative input datasets frozen (VALIDATED -> DATA FROZEN)
+    note: >
+      APPENDED, not a rewrite: the entry above was true when written and stays.
+      scripts/freeze_d9d_snapshot.py flipped BOTH dataset manifests to DATA
+      FROZEN at 2026-09-17T20:46:08Z (committed as 869db904...) -- byte
+      preserving, zero network access, recording the 13 per-file price CSV
+      hashes and both canonical dataset hashes (filings 3b294187...; prices
+      6ca6e433...). Independent post-freeze review PASSED on that commit. The
+      frozen pair is now immutable input evidence: no re-freeze, no further
+      manifest edit, no re-acquisition. Superseded prose that still said both
+      manifests "remain VALIDATED" / "deliberately NOT frozen" has been
+      corrected above.
+  - utc: "2026-09-18T01:30:42Z"
+    event: pre-2025 evidence reviewed and ACCEPTED; final C frozen (status pre-registered -> frozen-final)
+    note: >
+      Independent review of the pre-2025 empirical evidence returned P0=0 / P1=0 and
+      ACCEPTED it: EVIDENCE COMMIT aa176ddac213996a80768a538dc1afe000846609, PRODUCING
+      CODE e55cb09e8367053c24270743e8b8d96f5fe1e375. Reviewed: the real DEV internal OOS
+      run, the real 2024 validation run, and the final-C selection. The final C values
+      below are copied verbatim from the reviewed source selection artifact
+      results/historical_text_v2/sentiment_hist_text_v2_final_c_selection.json (sha256
+      725f8787b71a866a483abf8f567c09216e9af942c2aa3fa6672d03c026adab6f). Both targets
+      selected C=0.01 for Models 1/2/3 (model1_market_only, model2_text_only,
+      model3_market_text_combined); Model 0 (majority baseline) remains null. NO 2025 data
+      was used in the selection (selection_max_session 2024-12-31). C=0.01 sits at the
+      lower edge of the pre-registered grid [0.01, 0.1, 1.0, 10.0] and is recorded as a
+      disclosure/limitation, NOT permission for post-hoc tuning: the grid was not
+      expanded, no new C was searched, and no alternative regularization value or metric
+      was chosen. The 2025 period remains PREVIOUSLY INSPECTED / HISTORICAL EVALUATION,
+      never an untouched final holdout. Superseded prose in this file that still reads
+      PRE-REGISTERED / final configuration not frozen yet is a known documentation
+      inconsistency flagged to the owner for a wording-only correction; no methodology,
+      universe, feature, target, horizon, embargo, grid or model definition was altered.
 
 notes: >
   This is not a claim that point-in-time text adds predictive value --

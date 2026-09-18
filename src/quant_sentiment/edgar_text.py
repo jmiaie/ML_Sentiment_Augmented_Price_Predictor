@@ -14,7 +14,7 @@ _TAG_RE = re.compile(_OPEN + "[^" + _CLOSE + "]+" + _CLOSE)
 _WS_RE = re.compile(r"\s+")
 
 
-def html_to_plain_text(document: str, *, max_chars: int = 200_000) -> str:
+def html_to_plain_text(document: str, *, max_chars: int | None = 200_000) -> str:
     """Extract plain text from an EDGAR primary document.
 
     Uses BeautifulSoup when available; falls back to naive tag stripping.
@@ -31,15 +31,15 @@ def html_to_plain_text(document: str, *, max_chars: int = 200_000) -> str:
         text = soup.get_text(" ")
     text = unescape(text)
     text = _WS_RE.sub(" ", text).strip()
-    if len(text) > max_chars:
+    if max_chars is not None and len(text) > max_chars:
         text = text[:max_chars]
     return text
 
 
-def naive_strip_tags(document: str, *, max_chars: int = 200_000) -> str:
+def naive_strip_tags(document: str, *, max_chars: int | None = 200_000) -> str:
     text = _TAG_RE.sub(" ", document)
     text = unescape(text)
     text = _WS_RE.sub(" ", text).strip()
-    if len(text) > max_chars:
+    if max_chars is not None and len(text) > max_chars:
         text = text[:max_chars]
     return text

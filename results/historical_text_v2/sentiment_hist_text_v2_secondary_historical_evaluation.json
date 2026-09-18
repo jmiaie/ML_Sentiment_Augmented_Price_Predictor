@@ -1,0 +1,319 @@
+{
+  "branch": "research/d9d-cap-lift",
+  "c_source": "frozen_config_final_selected_c",
+  "code_git_head": "0fa6cfd3e124f36eea3383af7da2f71b6c43934f",
+  "config_path": "configs/experiments/sentiment_historical_text_study_v2.yaml",
+  "config_sha256": "bd702bf5f58311b80ad68dc0fc9bb89bbcd11479ddd49c480e7fd6beacdd80f8",
+  "config_status": "frozen-final",
+  "corpus": {
+    "counts_by_form": {
+      "10-K": 124,
+      "10-Q": 391,
+      "8-K": 1781
+    },
+    "dictionary_dataset_id_config": "lm_master_dictionary_2026_v1",
+    "dictionary_dataset_id_matches": true,
+    "dictionary_dataset_id_runtime": "lm_master_dictionary_2026_v1",
+    "filings_dataset_canonical_sha256": "3b2941870391b8584afaad46417cf3e6a0fe03509238fc6ac21958bb4c90f7f4",
+    "filings_dataset_id": "sec_filings_12issuer_2015_2025_v1",
+    "filings_manifest_status": "DATA FROZEN",
+    "frame_first_session": "2015-04-02",
+    "frame_last_session": "2025-12-15",
+    "n_filing_events_read": 2349,
+    "n_frame_rows": 2296,
+    "n_index_rows_not_ok": {},
+    "n_issuers_in_frame": 12,
+    "prices_dataset_canonical_sha256": "6ca6e433983fb5f629d084d0964229d5b9c91cbee0756f686598bea6c90d4cb2",
+    "prices_dataset_id": "yf_sentiment_equities_daily_2015_2025_v1",
+    "prices_manifest_status": "DATA FROZEN",
+    "skip_counts": {
+      "duplicate_accession": 0,
+      "empty_text": 0,
+      "insufficient_forward_window": 1,
+      "insufficient_market_history": 52,
+      "no_price_session": 0
+    }
+  },
+  "dataset_ids": {
+    "dictionary": "lm_master_dictionary_2026_v1",
+    "filings": "sec_filings_12issuer_2015_2025_v1",
+    "prices": "yf_sentiment_equities_daily_2015_2025_v1"
+  },
+  "experiment_id": "sentiment_hist_text_v2_secondary_historical_evaluation",
+  "historical_evaluation_label": "PREVIOUSLY INSPECTED / HISTORICAL EVALUATION",
+  "input_integrity": {
+    "filings_canonical_recomputed": "3b2941870391b8584afaad46417cf3e6a0fe03509238fc6ac21958bb4c90f7f4",
+    "filings_files_verified": 2361,
+    "filings_index_rows_ok": 2349,
+    "filings_issuers_verified": 12,
+    "filings_manifest_sha256": "9ad504c9335fb7fafc2f1722bdcd33347bcb034c02013f1fafbb329e3ad6a6cc",
+    "filings_text_files_verified": 2349,
+    "frozen_record_freeze_timestamp_utc": "2026-09-17T20:46:08Z",
+    "prices_canonical_recomputed": "6ca6e433983fb5f629d084d0964229d5b9c91cbee0756f686598bea6c90d4cb2",
+    "prices_files_verified": 13,
+    "prices_manifest_sha256": "32c0f47c61c67601775ff3be3747b6ec4e62626fc6e805a1dc1731498a4bacc4",
+    "verification_mode": "frozen_bytes_sha256",
+    "verified": true
+  },
+  "period_selected": "historical_evaluation",
+  "result": {
+    "c_grid": [
+      0.01,
+      0.1,
+      1.0,
+      10.0
+    ],
+    "eval_period": {
+      "end": "2025-12-31",
+      "name": "historical_evaluation",
+      "start": "2025-01-01"
+    },
+    "formation": {
+      "end": "2023-12-31",
+      "name": "formation_dev",
+      "start": "2015-01-01"
+    },
+    "key_metrics": {
+      "c_selection": "fixed_from_frozen_config",
+      "embargo_sessions": 5,
+      "eval_end_session": "2025-12-15",
+      "eval_first_effective_session_ordinal": 3776,
+      "eval_start_session": "2025-01-06",
+      "evaluation_block_label": "EVALUATION PERIOD OUT-OF-SAMPLE",
+      "headline_bootstrap_delta_log_loss_ci95": {
+        "block_size": 10,
+        "ci_high": 0.011843341749867446,
+        "ci_low": -0.004716566468150278,
+        "mean_delta": 0.0031305037962791092,
+        "n_resamples": 500
+      },
+      "headline_delta_balanced_accuracy_model3_minus_model1": 0.015428276573787425,
+      "headline_delta_log_loss_model3_minus_model1": 0.003130503796278883,
+      "headline_fold_delta_log_loss_distribution": [],
+      "internal_test_end_session": null,
+      "internal_test_start_session": null,
+      "max_train_target_end_ordinal": 3768,
+      "model0_balanced_accuracy": 0.5,
+      "model0_log_loss": 0.6926514192669567,
+      "model1_balanced_accuracy": 0.5413312693498452,
+      "model1_brier_score": 0.24514867271893112,
+      "model1_log_loss": 0.6833713862818113,
+      "model1_roc_auc": 0.573374613003096,
+      "model2_balanced_accuracy": 0.5206398348813209,
+      "model2_log_loss": 0.695996144657642,
+      "model3_balanced_accuracy": 0.5567595459236326,
+      "model3_brier_score": 0.2466902193582848,
+      "model3_log_loss": 0.6865018900780901,
+      "model3_roc_auc": 0.5619195046439629,
+      "n_eval_rows": 197,
+      "n_formation_rows": 1889,
+      "n_internal_test_rows": null,
+      "n_train_rows": 2098,
+      "n_unique_issuers_eval": 12,
+      "pre_evaluation_training": {
+        "embargo_sessions": 5,
+        "first_eval_effective_session": "2025-01-06",
+        "first_eval_effective_session_ordinal": 3776,
+        "n_history_rows": 2296,
+        "n_train_rows": 2098,
+        "purge_cutoff_ordinal": 3771,
+        "purge_cutoff_session": "2024-12-27",
+        "target_column": "secondary_direction",
+        "train_end_session": "2024-12-16",
+        "train_row_index_sha256": "c780cf6f6552bdad71e1d89648274488a7b067d77fa99dcb8195123e7a78f470",
+        "train_start_session": "2015-04-02",
+        "train_target_end_max_ordinal": 3768
+      },
+      "selected_regularization": {
+        "model0_majority_baseline": null,
+        "model1_market_only": 0.01,
+        "model2_text_only": 0.01,
+        "model3_market_text_combined": 0.01
+      },
+      "target_window_slicing": {
+        "evaluation": {
+          "n_effective_session_in_period": 197,
+          "n_excluded_missing_target_end": 0,
+          "n_excluded_target_window_crossing": 0,
+          "n_included": 197,
+          "n_rows_in_frame": 2296,
+          "period": "historical_evaluation",
+          "period_last_session": "2025-12-31",
+          "period_last_session_ordinal": 4023,
+          "target_column": "secondary_direction"
+        },
+        "formation": {
+          "n_effective_session_in_period": 1889,
+          "n_excluded_missing_target_end": 0,
+          "n_excluded_target_window_crossing": 0,
+          "n_included": 1889,
+          "n_rows_in_frame": 2296,
+          "period": "formation_dev",
+          "period_last_session": "2023-12-29",
+          "period_last_session_ordinal": 3521,
+          "target_column": "secondary_direction"
+        }
+      },
+      "train_end_session": "2024-12-16",
+      "train_eval_intersection_count": 0,
+      "train_start_session": "2015-04-02",
+      "train_windows_close_before_eval_start": true,
+      "walk_forward_fold_count": 90
+    },
+    "model_specs": {
+      "model0_majority_baseline": [],
+      "model1_market_only": [
+        "issuer_return_1d",
+        "issuer_return_5d",
+        "issuer_return_20d",
+        "issuer_realized_vol_20d",
+        "issuer_realized_vol_60d",
+        "issuer_volume_zscore_20d",
+        "spy_return_1d",
+        "spy_return_5d",
+        "spy_return_20d",
+        "spy_realized_vol_20d"
+      ],
+      "model2_text_only": [
+        "negative_fraction",
+        "positive_fraction",
+        "uncertainty_fraction",
+        "litigious_fraction",
+        "constraining_fraction",
+        "net_tone",
+        "log_word_count"
+      ],
+      "model3_market_text_combined": [
+        "issuer_return_1d",
+        "issuer_return_5d",
+        "issuer_return_20d",
+        "issuer_realized_vol_20d",
+        "issuer_realized_vol_60d",
+        "issuer_volume_zscore_20d",
+        "spy_return_1d",
+        "spy_return_5d",
+        "spy_return_20d",
+        "spy_realized_vol_20d",
+        "negative_fraction",
+        "positive_fraction",
+        "uncertainty_fraction",
+        "litigious_fraction",
+        "constraining_fraction",
+        "net_tone",
+        "log_word_count"
+      ]
+    },
+    "notes": "Event-level filing observations (no manufactured non-event days). Real Loughran-McDonald categories via pysentiment2 (not vendored). Excess-return-over-SPY direction target. Purged, session-distance-embargoed walk-forward (not a row-count gap). C selected on formation only; eval uses locked C. Headline is Model 3 minus Model 1 log loss, on the PRIMARY target unless this run's target_column is secondary. Training/evaluation geometry is reported in key_metrics: a formation_dev run scores the DEVELOPMENT INTERNAL OOS TEST block (neither the 2025 holdout nor final validation), while a later evaluation window trains on every admissible earlier observation.",
+    "period_metrics": {
+      "model0_majority_baseline": {
+        "accuracy": 0.5177664974619289,
+        "balanced_accuracy": 0.5,
+        "brier_score": 0.24975214388504624,
+        "calibration_table": [
+          {
+            "bin_lower": 0.4,
+            "bin_upper": 0.6000000000000001,
+            "count": 197,
+            "mean_predicted_probability": 0.49046711153479516,
+            "observed_positive_rate": 0.48223350253807107
+          }
+        ],
+        "f1": 0.0,
+        "log_loss": 0.6926514192669567,
+        "precision": 0.0,
+        "recall": 0.0,
+        "roc_auc": 0.5,
+        "samples": 197
+      },
+      "model1_market_only": {
+        "accuracy": 0.5482233502538071,
+        "balanced_accuracy": 0.5413312693498452,
+        "brier_score": 0.24514867271893112,
+        "calibration_table": [
+          {
+            "bin_lower": 0.2,
+            "bin_upper": 0.4,
+            "count": 10,
+            "mean_predicted_probability": 0.38104993879184096,
+            "observed_positive_rate": 0.2
+          },
+          {
+            "bin_lower": 0.4,
+            "bin_upper": 0.6000000000000001,
+            "count": 187,
+            "mean_predicted_probability": 0.48431109508450154,
+            "observed_positive_rate": 0.49732620320855614
+          }
+        ],
+        "f1": 0.4258064516129032,
+        "log_loss": 0.6833713862818113,
+        "precision": 0.55,
+        "recall": 0.3473684210526316,
+        "roc_auc": 0.573374613003096,
+        "samples": 197
+      },
+      "model2_text_only": {
+        "accuracy": 0.5279187817258884,
+        "balanced_accuracy": 0.5206398348813209,
+        "brier_score": 0.2514137113890632,
+        "calibration_table": [
+          {
+            "bin_lower": 0.4,
+            "bin_upper": 0.6000000000000001,
+            "count": 197,
+            "mean_predicted_probability": 0.4895568208726975,
+            "observed_positive_rate": 0.48223350253807107
+          }
+        ],
+        "f1": 0.39215686274509803,
+        "log_loss": 0.695996144657642,
+        "precision": 0.5172413793103449,
+        "recall": 0.3157894736842105,
+        "roc_auc": 0.4913312693498452,
+        "samples": 197
+      },
+      "model3_market_text_combined": {
+        "accuracy": 0.5634517766497462,
+        "balanced_accuracy": 0.5567595459236326,
+        "brier_score": 0.2466902193582848,
+        "calibration_table": [
+          {
+            "bin_lower": 0.2,
+            "bin_upper": 0.4,
+            "count": 8,
+            "mean_predicted_probability": 0.3715902807416119,
+            "observed_positive_rate": 0.375
+          },
+          {
+            "bin_lower": 0.4,
+            "bin_upper": 0.6000000000000001,
+            "count": 185,
+            "mean_predicted_probability": 0.4806709995678775,
+            "observed_positive_rate": 0.4864864864864865
+          },
+          {
+            "bin_lower": 0.6000000000000001,
+            "bin_upper": 0.8,
+            "count": 4,
+            "mean_predicted_probability": 0.6180037871109522,
+            "observed_positive_rate": 0.5
+          }
+        ],
+        "f1": 0.44871794871794873,
+        "log_loss": 0.6865018900780901,
+        "precision": 0.5737704918032787,
+        "recall": 0.3684210526315789,
+        "roc_auc": 0.5619195046439629,
+        "samples": 197
+      }
+    },
+    "selected_regularization": {
+      "model0_majority_baseline": null,
+      "model1_market_only": 0.01,
+      "model2_text_only": 0.01,
+      "model3_market_text_combined": 0.01
+    },
+    "target_column": "secondary_direction"
+  },
+  "target_name": "secondary"
+}
