@@ -1,6 +1,16 @@
 # Sentiment/textual-signal historical validation (D9-D) — AUTHORITATIVE v2
-# Status: PRE-REGISTERED (methodology authored from the spec text and never
-# tuned on any observed result). NOT frozen-for-holdout -- see "Execution status".
+# Status: FROZEN-FINAL.
+#
+# The methodology was pre-registered from Directive #9 before the authoritative
+# v2 empirical runs. DEV internal OOS and 2024 validation are complete and
+# independently reviewed. The final per-target C values were selected from the
+# pre-specified 2024 validation grid and frozen before the single 2025
+# historical evaluation.
+#
+# The FINAL CONFIGURATION is now frozen. The 2025 period remains labeled
+# PREVIOUSLY INSPECTED / HISTORICAL EVALUATION because AAPL/MSFT/AMZN 2025
+# outcomes had already been inspected under the preserved non-conforming v1
+# study. No authoritative v2 2025 evaluation has yet been executed.
 #
 # Supersedes sentiment_historical_text_study_v1.yaml, which Directive #9 itself
 # labels EXPLORATORY / NON-CONFORMING TO FINAL D9-D (3 issuers, 8-K only,
@@ -11,12 +21,13 @@
 #
 # Methodology here (universe, features, targets, models, C grid, embargo) is
 # taken directly from Directive #9's own D9-D spec text -- none of it was
-# derived from or tuned against any observed result, so the METHODOLOGY is
-# PRE-REGISTERED here. (The earlier "frozen on creation" wording was wrong and
-# is corrected: pre-registration is not a freeze.) The FINAL CONFIGURATION is
-# NOT frozen yet -- it is frozen only after DEV + 2024 validation have produced
-# a reviewed final-C selection, immediately before the single 2025 historical
-# evaluation. See "CHRONOLOGY".
+# derived from or tuned against any observed result, so the METHODOLOGY was
+# PRE-REGISTERED before the authoritative v2 empirical runs. (The earlier
+# "frozen on creation" wording was wrong and is corrected: pre-registration is
+# not a freeze.) The FINAL CONFIGURATION is now FROZEN: the per-target final C
+# values were written into walk_forward.final_selected_c from the reviewed
+# pre-2025 selection, immediately before the single 2025 historical
+# evaluation. See "CHRONOLOGY" and status_history below.
 #
 # EXECUTION STATUS (2026-09-17, MEASURED -- supersedes the earlier "corpus has
 # NOT been acquired / egress proxy blocks SEC" note, which was a session-local
@@ -40,6 +51,10 @@
 #   pre-register (this file) -> acquire + freeze corpus -> DEV ->
 #   2024 validation -> select final C -> write final_selected_c here ->
 #   freeze config -> gate 2025 exactly once as HISTORICAL EVALUATION.
+# Every step through "freeze config" is DONE (final freeze commit
+# 852761753af2aa72abf477fc3961629c5a496d17, parent
+# aa176ddac213996a80768a538dc1afe000846609); the 2025 gate is the only
+# remaining step and has NOT been executed.
 #
 # IMPORTANT HOLDOUT CLASSIFICATION (per Directive #9's own D9-D spec text):
 # the existing v1 study already inspected 2025 outcomes for AAPL/MSFT/AMZN,
