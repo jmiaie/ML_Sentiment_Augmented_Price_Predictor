@@ -1,0 +1,232 @@
+{
+  "pack": "D10-D publication pack",
+  "slug": "sentiment-study",
+  "directive": 10,
+  "lane": "D",
+  "repo": "jmiaie/ML_Sentiment_Augmented_Price_Predictor",
+  "branch": "publication/sentiment-study",
+  "created_utc": "2026-09-18",
+  "policy": {
+    "re_execution": "FORBIDDEN - publication/communication over accepted D9-D evidence only; no retrain, retune, reacquire, rerun 2025, or artifact rewrite",
+    "published_externally": false,
+    "merge": "none - draft PR only",
+    "numbers_source": "accepted artifacts under results/ plus the append-only ledger; no number in this pack may originate outside them",
+    "superseded_material": "the v1 study is preserved unmodified, is non-conforming to the final D9-D standard, and none of its numbers are reused as evidence here"
+  },
+  "accepted_evidence": {
+    "accepted_head": "9184eff7571f8911f410632df8a06601c98311bc",
+    "accepted_head_subject": "D9-D: 2025 HISTORICAL EVALUATION -- executed once, credible null",
+    "accepted_branch": "research/d9d-cap-lift",
+    "producing_code_head_2025": "0fa6cfd3e124f36eea3383af7da2f71b6c43934f",
+    "pre_2025_evidence_commit": "aa176ddac213996a80768a538dc1afe000846609",
+    "pre_2025_producing_code_head": "e55cb09e8367053c24270743e8b8d96f5fe1e375",
+    "final_config_freeze_commit": "852761753af2aa72abf477fc3961629c5a496d17",
+    "dataset_freeze_commit": "869db9048fd938080669894358aa84bf7d30e557",
+    "binding_2025_label": "PREVIOUSLY INSPECTED / HISTORICAL EVALUATION",
+    "binding_2025_label_is_not": "UNTOUCHED 2025 HOLDOUT",
+    "label_reason": "AAPL/MSFT/AMZN 2025 outcomes were already inspected under the preserved v1 study; the remaining nine issuers were never isolated into a substitute confirmatory sample",
+    "git_shas": [
+      "0fa6cfd3e124f36eea3383af7da2f71b6c43934f",
+      "9184eff7571f8911f410632df8a06601c98311bc",
+      "e55cb09e8367053c24270743e8b8d96f5fe1e375",
+      "aa176ddac213996a80768a538dc1afe000846609",
+      "852761753af2aa72abf477fc3961629c5a496d17",
+      "869db9048fd938080669894358aa84bf7d30e557"
+    ],
+    "external_git_shas": [
+      "ca185e4d4a675559ed3326f33334347909936aaa",
+      "6df35d56c5496c1b1dda26c9c7a28f1bc0c6555f"
+    ],
+    "external_git_shas_note": "Hashes of objects in OTHER repositories (the stale sentiment PR #4 and the central hub tip). They cannot be resolved from this clone and are verified as declared values only; they appear in this pack solely to evidence that neither was modified by D10."
+  },
+  "experiment": {
+    "experiment_id": "sentiment_hist_text_v2",
+    "config_path": "configs/experiments/sentiment_historical_text_study_v2.yaml",
+    "config_sha256": "bd702bf5f58311b80ad68dc0fc9bb89bbcd11479ddd49c480e7fd6beacdd80f8",
+    "config_status": "frozen-final",
+    "runner": "scripts/run_historical_text_study_v2.py",
+    "holdout_gate_flag": "--allow-2025",
+    "c_grid": [
+      0.01,
+      0.1,
+      1.0,
+      10.0
+    ],
+    "final_selected_c": {
+      "primary": 0.01,
+      "secondary": 0.01,
+      "models_with_c": 3,
+      "model0": null
+    },
+    "superseded_predecessors": {
+      "sentiment_hist_text_v1": "EXPLORATORY / NON-CONFORMING TO FINAL D9-D (3 issuers, 8-K only, non-LM embedded lexicon, day-level sample unit with manufactured non-event days, raw rather than excess-return targets, no real NYSE calendar). Preserved unmodified for audit trail; none of its numbers are reused."
+    }
+  },
+  "dataset": {
+    "filings_dataset_id": "sec_filings_12issuer_2015_2025_v1",
+    "filings_manifest_path": "data/manifests/sec_filings_12issuer_2015_2025_v1.json",
+    "filings_manifest_sha256": "9ad504c9335fb7fafc2f1722bdcd33347bcb034c02013f1fafbb329e3ad6a6cc",
+    "filings_dataset_canonical_sha256": "3b2941870391b8584afaad46417cf3e6a0fe03509238fc6ac21958bb4c90f7f4",
+    "prices_dataset_id": "yf_sentiment_equities_daily_2015_2025_v1",
+    "prices_manifest_path": "data/manifests/yf_sentiment_equities_daily_2015_2025_v1.json",
+    "prices_manifest_sha256": "32c0f47c61c67601775ff3be3747b6ec4e62626fc6e805a1dc1731498a4bacc4",
+    "prices_dataset_canonical_sha256": "6ca6e433983fb5f629d084d0964229d5b9c91cbee0756f686598bea6c90d4cb2",
+    "dictionary_dataset_id": "lm_master_dictionary_2026_v1",
+    "manifest_status": "DATA FROZEN",
+    "freeze_timestamp_utc": "2026-09-17T20:46:08Z",
+    "n_issuers": 12,
+    "n_price_files": 13,
+    "n_filing_events_read": 2349,
+    "n_frame_rows": 2296,
+    "raw_data_in_repo": false,
+    "raw_data_note": "Raw filings text and price CSVs are NOT committed to this repository (data/ holds manifests only). The canonical dataset hashes are manifest-declared values that the run-time frozen-input gate re-verified from local bytes at run time; they cannot be re-derived from the repository tree and are treated as accepted, disclosure-limited inputs.",
+    "universe_bias_disclosure": "Static, present-day-selected universe of 12 large currently-listed issuers plus SPY; carries survivorship/selection bias (no delisted, merged, or historically-prominent-but-now-obscure issuers). Disclosed, not hidden.",
+    "canonical_dataset_hashes": [
+      {
+        "sha256": "3b2941870391b8584afaad46417cf3e6a0fe03509238fc6ac21958bb4c90f7f4",
+        "field": "sha256.dataset_canonical",
+        "must_appear_in": [
+          "data/manifests/sec_filings_12issuer_2015_2025_v1.json",
+          "results/historical_text_v2/sentiment_hist_text_v2_primary_historical_evaluation.json",
+          "results/historical_text_v2/sentiment_hist_text_v2_secondary_historical_evaluation.json"
+        ],
+        "note": "manifest-declared canonical dataset hash. Raw filings text is not committed, so this value cannot be re-hashed from the tree; it is verified by requiring the exact string to be physically present in the hash-verified manifest AND in both hash-verified 2025 artifacts (two independent sources agreeing)."
+      },
+      {
+        "sha256": "6ca6e433983fb5f629d084d0964229d5b9c91cbee0756f686598bea6c90d4cb2",
+        "field": "sha256.dataset_canonical",
+        "must_appear_in": [
+          "data/manifests/yf_sentiment_equities_daily_2015_2025_v1.json",
+          "results/historical_text_v2/sentiment_hist_text_v2_primary_historical_evaluation.json",
+          "results/historical_text_v2/sentiment_hist_text_v2_secondary_historical_evaluation.json"
+        ],
+        "note": "manifest-declared canonical dataset hash, same verification rule as the filings canonical."
+      },
+      {
+        "sha256": "a9e9c1b0b37ae2aaaf308d635f747ab6bc23a289d369c25f69d4cfcf49839ef4",
+        "field": "result.key_metrics.pre_evaluation_training.train_row_index_sha256",
+        "must_appear_in": [
+          "results/historical_text_v2/sentiment_hist_text_v2_primary_historical_evaluation.json"
+        ],
+        "note": "training-row index fingerprint recorded by the accepted primary 2025 run. Target-specific, so it is anchored only where it is recorded."
+      }
+    ]
+  },
+  "source_artifacts": [
+    {
+      "path": "results/historical_text_v2/sentiment_hist_text_v2_primary_historical_evaluation.json",
+      "sha256": "6ed9197eb2d51cd68341a7fc1a9790eb61d6fa9ad10fda9e148a8da5120cca36",
+      "role": "PRIMARY 2025 historical evaluation (the D10-D headline subject)"
+    },
+    {
+      "path": "results/historical_text_v2/sentiment_hist_text_v2_secondary_historical_evaluation.json",
+      "sha256": "b207ed7a5c7923f6bdb0217bdc37963b5e81b37a2dc34788b0696ef822557d12",
+      "role": "SECONDARY 2025 historical evaluation (pre-specified robustness check)"
+    },
+    {
+      "path": "results/historical_text_v2/sentiment_hist_text_v2_primary_validation.json",
+      "sha256": "5eb3d5b839d49672398c3e5bc681f47fe79339ea9fb7f819746a327fdcf7f2a3",
+      "role": "pre-2025 2024 validation period (primary)"
+    },
+    {
+      "path": "results/historical_text_v2/sentiment_hist_text_v2_secondary_validation.json",
+      "sha256": "e2e574e959fe5d8f80ab2e4fc072de49ff92164a28a6929ffebdd83f39330e40",
+      "role": "pre-2025 2024 validation period (secondary)"
+    },
+    {
+      "path": "results/historical_text_v2/sentiment_hist_text_v2_primary_formation_dev.json",
+      "sha256": "3ccbcf530f8c09f7860b261b8c0c136d4a3a233f142388f29a3138ce438cd359",
+      "role": "pre-2025 development internal OOS test block (primary)"
+    },
+    {
+      "path": "results/historical_text_v2/sentiment_hist_text_v2_secondary_formation_dev.json",
+      "sha256": "a8ce502eabf3d39d0ff665da46d8debcdb0a8e14a862124ee77180d9017a79f0",
+      "role": "pre-2025 development internal OOS test block (secondary)"
+    },
+    {
+      "path": "results/historical_text_v2/sentiment_hist_text_v2_final_c_selection.json",
+      "sha256": "725f8787b71a866a483abf8f567c09216e9af942c2aa3fa6672d03c026adab6f",
+      "role": "pre-2025-only final C selection grid (source of the frozen C values)"
+    },
+    {
+      "path": "configs/experiments/sentiment_historical_text_study_v2.yaml",
+      "sha256": "bd702bf5f58311b80ad68dc0fc9bb89bbcd11479ddd49c480e7fd6beacdd80f8",
+      "role": "frozen conforming configuration"
+    },
+    {
+      "path": "data/manifests/sec_filings_12issuer_2015_2025_v1.json",
+      "sha256": "9ad504c9335fb7fafc2f1722bdcd33347bcb034c02013f1fafbb329e3ad6a6cc",
+      "role": "frozen filings manifest (declares per-file hashes + canonical dataset hash)"
+    },
+    {
+      "path": "data/manifests/yf_sentiment_equities_daily_2015_2025_v1.json",
+      "sha256": "32c0f47c61c67601775ff3be3747b6ec4e62626fc6e805a1dc1731498a4bacc4",
+      "role": "frozen prices manifest (declares the 13 per-file CSV hashes + canonical dataset hash)"
+    },
+    {
+      "path": "research/experiment-ledger.csv",
+      "sha256": "19df8052ddfcb548dd45c630d79e3c206e76067effa0eb168d94335295c82437",
+      "role": "append-only experiment ledger (v2 rows carry artifact hashes + key_metrics)"
+    },
+    {
+      "path": "research/holdout-audit.md",
+      "sha256": "8a80bdcf18de87ef196bbd5048d90879de95f6f8d5cf83f65f61f6eddc2939eb",
+      "role": "holdout audit, classification rules and pre-committed 2025 label"
+    },
+    {
+      "path": "src/quant_sentiment/historical_text_study_v2.py",
+      "sha256": "e1b0895df8eabb11d1f2768cc21e6735ed53ba28d17e18438e6fcf588ca4e446",
+      "role": "authoritative v2 study implementation at the accepted HEAD"
+    },
+    {
+      "path": "src/quant_sentiment/frozen_inputs.py",
+      "sha256": "2a1fc3b93e51df74e88344e5abd5e152daee126a65438285ef9ea8671d49d7ff",
+      "role": "zero-network frozen-input verification gate"
+    },
+    {
+      "path": "scripts/run_historical_text_study_v2.py",
+      "sha256": "66688835ae5b3beda127276a0368ae9182cdb465ff40e99f4222e530d57d057b",
+      "role": "authoritative runner (the single 2025 invocation)"
+    },
+    {
+      "path": "results/historical_text/sentiment_hist_text_v1_holdout_2025.json",
+      "sha256": "216896f0b46fd8854ecb1f042816fcdca29d9fabcf65fbdae81a12ffb87365d9",
+      "role": "SUPERSEDED v1 2025 run (non-conforming; preserved; not a publication source)"
+    },
+    {
+      "path": "results/historical_text/sentiment_hist_text_v1_val_2024.json",
+      "sha256": "4d15f062c6c048b7335d2ddd20eb2dfe114c7e2ce50629409843b297adc54e4a",
+      "role": "SUPERSEDED v1 2024 run (non-conforming; preserved; not a publication source)"
+    },
+    {
+      "path": "results/historical_text/sentiment_hist_text_v1_dev_formation.json",
+      "sha256": "04aaf601ba72e38153815247532d4005556f377eb5c7b4fe5e09db26e037ac87",
+      "role": "SUPERSEDED v1 development run (non-conforming; preserved; not a publication source)"
+    }
+  ],
+  "verification": {
+    "commands": [
+      "python3 publication/sentiment-study/scripts/publication_pack.py build",
+      "git diff --exit-code -- publication/sentiment-study/tables publication/sentiment-study/figures",
+      "python3 publication/sentiment-study/scripts/publication_pack.py check",
+      "python3 publication/sentiment-study/scripts/publication_pack.py hashcheck",
+      "python3 publication/sentiment-study/scripts/claim_crosscheck.py"
+    ],
+    "network": "none",
+    "python": "3.12.3",
+    "checks": [
+      "every source_artifacts sha256 re-measured against disk bytes",
+      "tables/ and figures/ rebuilt deterministically and byte-compared (CI additionally requires a clean git diff after build)",
+      "every (path, sha256) citation in RESULT-SOURCE-MAP.md re-verified",
+      "every 64-hex token anywhere in the pack is a declared or measured hash",
+      "every 40-hex token is a declared git object, resolved with git cat-file",
+      "the headline numbers are independently re-derived from the accepted artifacts by a script sharing no code with the generator"
+    ]
+  },
+  "generated": {
+    "tables/artifact-hashes.csv": "measured sha256 + byte size for every declared source artifact, next to its declared value",
+    "tables/period-metrics.csv": "per period x target x model metrics exactly as recorded in the accepted artifacts",
+    "tables/target-comparison.csv": "per period x target headline comparison (model3 minus model1), bootstrap CI, geometry and provenance fields",
+    "figures/log-loss-comparison.svg": "deterministic grouped bars: 2025 log loss per model, per target, with M3 highlighted against its M1 headline comparison"
+  }
+}
