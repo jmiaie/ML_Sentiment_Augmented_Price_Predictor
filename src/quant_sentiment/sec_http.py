@@ -43,6 +43,13 @@ def user_agent() -> str:
     return value
 
 
+# Backwards-compatible alias for legacy (v1) callers that import this name:
+# scripts/acquire_edgar_8k_yf_megacap_daily.py and tests/test_sec_http.py, both
+# of which landed on main in parallel with this branch's own rename to
+# user_agent(). Same loud-failure behaviour, one name for both call styles.
+get_sec_user_agent = user_agent
+
+
 # Deprecated: legacy (v1) callers import this name for their manifest record.
 # It is no longer a hard-coded contact string, and authoritative v2 code must
 # call user_agent() instead so a missing environment value fails loudly.
