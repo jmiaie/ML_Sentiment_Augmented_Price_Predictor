@@ -5,3 +5,6 @@ __pycache__/
 *.pyc
 .venv/
 artifacts/*.tmp
+
+# Directive #9: raw vendor snapshots stay local / gitignored
+data/raw/

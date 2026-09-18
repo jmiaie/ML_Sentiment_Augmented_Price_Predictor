@@ -1,0 +1,77 @@
+# Sentiment historical text/filing validation — FROZEN FOR HOLDOUT
+# Status: frozen-for-holdout
+# FINAL CONFIGURATION FROZEN after formation (2015-2023) + validation (2024).
+# Holdout (2025) may now be evaluated once; do not retune after this freeze.
+
+experiment_id: sentiment_hist_text_v1
+status: frozen-for-holdout
+directive: 9
+dataset_id: edgar_8k_yf_megacap_daily_2015_2025_v1
+primary_symbol: AAPL
+seed: 7
+
+universe:
+  symbols: [AAPL, MSFT, AMZN]
+  forms: [8-K]
+  interval: 1d
+  description: >
+    Reproducible megacap subset. SEC EDGAR 8-K primary documents + yfinance
+    daily prices. Not full EDGAR corpus.
+
+periods:
+  requested_data_start: "2015-01-01"
+  requested_data_end_exclusive: "2026-01-01"
+  formation_dev: {start: "2015-01-01", end_inclusive: "2023-12-31"}
+  validation: {start: "2024-01-01", end_inclusive: "2024-12-31"}
+  holdout: {start: "2025-01-01", end_inclusive: "2025-12-31"}
+  holdout_access: allowed_after_final_configuration_frozen
+
+target_column: next_session_direction
+
+walk_forward:
+  initial_train_size: 60
+  validation_size: 20
+  formation_internal_test_size: 20
+  step_size: 20
+  label_horizon: 1
+  embargo: 0
+  c_values: [0.1, 1.0, 10.0]
+
+ablations:
+  - majority_baseline
+  - market_only_logistic
+  - sentiment_only_logistic
+  - combined_logistic
+
+sentiment:
+  lexicon_id: sentiment_d9_financial_polarity_v1
+  lexicon_version: "1"
+  lookback_days: 5
+  point_in_time_field: acceptanceDateTime
+
+evaluation:
+  invent_metrics: false
+  report_nulls_exactly: true
+  primary_comparison: delta_log_loss_combined_minus_market
+
+constraints:
+  no_2025_evaluation_until_freeze: false
+  no_retune_after_freeze: true
+  no_universe_change_after_dataset_freeze: true
+  no_ci_network_fetch: true
+  no_invented_filing_text: true
+  no_invented_labels: true
+  synthetic_not_a_substitute_for_d9_historical_claim: true
+
+freeze_record:
+  frozen_for_holdout_utc: "2026-09-16T04:15:00Z"
+  basis: >
+    Formation (2015-2023) + validation (2024) completed under pre-registered D5
+    walk-forward defaults. No hyperparameter search beyond C in {0.1,1.0,10.0}
+    on formation folds. Primary symbol AAPL; lexicon sentiment_d9_financial_polarity_v1;
+    dataset edgar_8k_yf_megacap_daily_2015_2025_v1 unchanged. No 2025 access before freeze.
+
+notes: >
+  FINAL CONFIGURATION FROZEN. Parameters locked to pre-registered D5 defaults.
+  Honest scope: megacap 8-K subset + simplified lexicon polarity + yfinance prices.
+  Not full EDGAR / not LM-complete / not transformer embeddings.
