@@ -256,7 +256,9 @@ def check() -> int:
 
     artifact_hashes = 0
     if not repro["source_artifacts"]:
-        failures.append("reproducibility.json lists no source_artifacts — the hash gate would pass vacuously")
+        failures.append(
+            "reproducibility.json lists no source_artifacts — the hash gate would pass vacuously"
+        )
     for src in repro["source_artifacts"]:
         path = ROOT / src["path"]
         if not path.is_file():
@@ -288,7 +290,8 @@ def check() -> int:
         # printed "18 map citations verified" and never mentioned the rows it did not match.
         if ANYROW.match(line) and not ROW.match(line):
             failures.append(
-                f"map row {ANYROW.match(line).group(1)}: label class not covered by the citation gate"
+                f"map row {ANYROW.match(line).group(1)}: "
+                f"label class not covered by the citation gate"
             )
             continue
         match = ROW.match(line)
