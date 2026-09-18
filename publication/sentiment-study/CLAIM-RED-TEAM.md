@@ -107,8 +107,10 @@ adjacent and explicit.
 
 ## Summary
 
-One residual gap is upheld and disclosed (CRT-4, the un-gated §7/§8 prose values),
-one wording risk is upheld and accepted (CRT-8), one structural limitation is
-upheld and disclosed (CRT-9), and one phrasing risk is flagged for the reviewer
-(CRT-12). No claim in this pack was found to outrun its evidence, and none was
-found stated without a citation.
+No residual gap remains open: CRT-4's §7/§8 prose values, previously un-gated, are
+now read back out of the paper and compared against the artifacts by
+`claim_crosscheck.py`, which fails the build on a drifting cell (RESOLVED by
+mechanical check, detailed under CRT-4). One wording risk is upheld and accepted
+(CRT-8), one structural limitation is upheld and disclosed (CRT-9), and one phrasing
+risk is flagged for the reviewer (CRT-12). No claim in this pack was found to outrun
+its evidence, and none was found stated without a citation.

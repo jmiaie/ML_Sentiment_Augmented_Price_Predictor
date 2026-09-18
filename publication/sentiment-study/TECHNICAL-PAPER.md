@@ -108,9 +108,10 @@ because it was fixed as the headline metric before evaluation.
 
 Geometry is read from the artifacts, not asserted here:
 
-- Training block `2015-04-02` → `2024-12-20`, 2,099 training rows for the
-  primary target; 2,098 for the secondary target, whose 5-session embargo
-  removes one further row.
+- Training block `2015-04-02` → `2024-12-20` for the primary target and
+  `2015-04-02` → `2024-12-16` for the secondary target, at 2,099 and 2,098
+  training rows respectively; the secondary's 5-session embargo both ends its
+  training block four sessions earlier and removes one further row.
 - Purge cutoff session `2025-01-03` at ordinal 3,775 (primary target);
   `2024-12-27` at ordinal 3,771 (secondary target). Last training target end
   ordinal 3,768 is the same for both targets and sits before either cutoff.
