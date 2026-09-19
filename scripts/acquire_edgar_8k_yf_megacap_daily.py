@@ -14,6 +14,7 @@ Network acquisition is local/agent only — never from CI.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import sys
 import urllib.error
@@ -264,7 +265,9 @@ def main(argv: list[str] | None = None) -> int:
         "auto_adjust": True,
         "actions": True,
         "forms": list(FORM_TYPES),
-        "sec_user_agent": get_sec_user_agent(),
+        "sec_user_agent_sha256": hashlib.sha256(
+            get_sec_user_agent().encode("utf-8")
+        ).hexdigest(),
         "lexicon_id": LEXICON_ID,
         "lexicon_version": LEXICON_VERSION,
         "max_filings_per_symbol": args.max_filings_per_symbol,

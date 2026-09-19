@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib.util
+import re
 from pathlib import Path
 from types import ModuleType
 from typing import Any
@@ -107,3 +108,22 @@ def test_filter_filings_date_and_form(acq: ModuleType) -> None:
         rows, start="2015-01-01", end_exclusive="2026-01-01", forms=("8-K",)
     )
     assert [r["accessionNumber"] for r in filtered] == ["0001", "0004"]
+
+
+_EMAIL_RE = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
+_PLACEHOLDER_DOMAINS = ("example.com", "example.invalid", "example.org")
+
+
+def test_no_plaintext_contact_in_committed_data() -> None:
+    """A plaintext personal contact address was once written into a frozen, published
+    manifest (the SEC User-Agent); the acquisition writers now record a SHA-256 of it
+    instead. This fails if any committed artifact under data/ regresses to a real one."""
+    data = Path(__file__).resolve().parents[1] / "data"
+    offenders = [
+        f"{path.relative_to(data)}: {email}"
+        for path in data.rglob("*")
+        if path.is_file()
+        for email in _EMAIL_RE.findall(path.read_text(encoding="utf-8", errors="ignore"))
+        if not email.lower().split("@")[1].endswith(_PLACEHOLDER_DOMAINS)
+    ]
+    assert offenders == [], f"plaintext contact address in committed artifact: {offenders}"
