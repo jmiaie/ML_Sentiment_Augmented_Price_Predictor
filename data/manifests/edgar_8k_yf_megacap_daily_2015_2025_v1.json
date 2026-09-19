@@ -37,7 +37,7 @@
     "auto_adjust": true,
     "actions": true,
     "forms": ["8-K"],
-    "sec_user_agent": "jmiaie ML_Sentiment_D9 research jmilam.emba@gmail.com",
+    "sec_user_agent": "jmiaie ML_Sentiment_D9 research you@example.com",
     "lexicon_id": "sentiment_d9_financial_polarity_v1",
     "lexicon_version": "1",
     "max_filings_per_symbol": null,
