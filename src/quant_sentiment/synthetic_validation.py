@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -163,7 +164,11 @@ def main() -> None:
         help="Path to the JSON artifact to generate.",
     )
     args = parser.parse_args()
-    run_synthetic_methodology_validation(args.output)
+    try:
+        run_synthetic_methodology_validation(args.output)
+    except OSError as exc:
+        print(f"error: cannot write to {args.output}: {exc}", file=sys.stderr)
+        raise SystemExit(1) from None
 
 
 if __name__ == "__main__":
