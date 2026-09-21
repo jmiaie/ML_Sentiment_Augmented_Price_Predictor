@@ -3,6 +3,66 @@
 **Lane status: READY FOR INDEPENDENT D10 REVIEW.**
 No merge. No external publication. No D11. No central control-plane edits.
 
+*(Authoring-phase status — 2026-09-18. Superseded as a statement of current state: the pack is now integrated on `main`. See "Post-review integration status" at the top of this file.)*
+
+## Post-review integration status
+
+This publication pack was originally authored and reviewed under a
+no-merge / stop-at-independent-review instruction. That language is preserved
+below as a historical record of the authoring phase.
+
+The pack has subsequently been integrated into `main`. This integration does
+not, by itself, constitute Directive #10 program sign-off.
+
+Current lifecycle status:
+INTEGRATED ON MAIN / FINAL D10 PROGRAM SIGN-OFF PENDING.
+
+| Integration record | Value |
+| --- | --- |
+| Accepted D9 head | `9184eff7571f8911f410632df8a06601c98311bc` (evidence head) — accepted producing-code head `0fa6cfd3e124f36eea3383af7da2f71b6c43934f` |
+| Cleared publication head / accepted publication ancestor | `457586331f1dcdf92dee312a3cae623542406364` (cleared ancestor; PR #6 head `3972c43941219a47415bd621aff19bd8a576e9af`) |
+| Current `main` head | `77a2390c460f2c609e5a39c36feed7da56a794e3` (the PR #6 merge commit itself) |
+| Integration path | Pack authored on `publication/sentiment-study`; PR **#5** merged it into `research/d9d-cap-lift` (`beff3d1b7c`); PR **#4** merged the D9-D study branch into `main` (`0cafe8ef`); PR **#6** merged `publication/sentiment-study` → `main` after conflict resolution (`77a2390`, 2026-09-18T20:32:14Z). `main`'s head **is** that merge commit. |
+| Relevant pull requests | #4 (D9-D study, merged), #5 (pack, merged), #6 (`main` integration, merged); #7, #2 remain open (PR hygiene inventory) |
+| Exact-head CI evidence | At exact `main` merge head `77a2390c`: `ci` run `35391992114` (success) — https://github.com/jmiaie/ML_Sentiment_Augmented_Price_Predictor/actions/runs/35391992114 ; `publication-pack` run `35391992514` (success) — https://github.com/jmiaie/ML_Sentiment_Augmented_Price_Predictor/actions/runs/35391992514 . |
+| Diff from accepted D9 is publication-only | **No — publication pack plus D9-D producing-path code.** `git diff --name-status 9184eff7 77a2390c` yields the pack and `.github/workflows/publication-pack.yml`, **plus** `scripts/acquire_edgar_8k_yf_megacap_daily.py` (M), `src/quant_sentiment/edgar_filings.py` / `hashing.py` / `market_data_io.py` (A), `src/quant_sentiment/sec_http.py` (M), `tests/test_sec_http.py` (A), `README.md` (M) and `src/quant_sentiment.egg-info/*` (M) — attributed to commit `ca185e4` (“D9-D: pre-registration fix, full v1 decoupling, env-sourced SEC_USER_AGENT, provenance”, PR #4). **No file under `results/`, `configs/` or `data/` changed**: no accepted result artifact, configuration, dataset manifest, experiment identity, or ledger row was altered, and no rerun was performed. |
+| Disclosed integration nuance | (1) The pack directory at `main` is **not** byte-identical to the cleared ancestor `457586331`: `git diff 457586331 77a2390c -- publication/sentiment-study/` returns exactly one file, `scripts/publication_pack.py`, from commit `24259e8` (“lint: reflow pack script to line-length=100 (formatting only)”, 5 insertions / 2 deletions, both re-wraps of existing string literals) — no semantic change to any hash, citation, or regeneration gate. PR #6's merge message states the pack directory remained byte-identical to the cleared tip: that holds for the merge *resolution*, but not literally for the final pack directory versus `457586331` as of `24259e8`. (2) `main` joins two D9-D lines — the evidence line (`0fa6cfd3` → `9184eff7`) and the producing-code/decoupling line (`ca185e4`, PR #4). |
+
+**Current program state.** D9: COMPLETE / ACCEPTED. D10: TECHNICALLY
+INTEGRATED / FORMAL SIGN-OFF PENDING. D11: PARTIALLY STARTED THROUGH THE
+PUBLIC HUB / NOT FORMALLY ACTIVATED. D12: DRAFTED / BLOCKED BY D11 HIRING
+EVIDENCE. D13: DRAFTED / NOT YET JUSTIFIED.
+
+**Final D10 program sign-off remains PENDING.** No authoritative
+`DIRECTIVE #10 PUBLICATION PACK SIGN-OFF: YES` has been issued for this pack.
+A D9 program sign-off is not a D10 program sign-off. This section records
+integration state only: it is not a sign-off, and it does not strengthen,
+weaken, or restate any finding, number, or claim in the pack.
+
+### How to read the rest of this directory
+
+Every "no merge", "no pull request merged", "draft PR only", "not on `main`",
+"not from `main`", "no external publication", and "READY FOR INDEPENDENT
+(D10) REVIEW" statement preserved below, or elsewhere in this directory, is
+**authoring-phase language** kept deliberately as the contemporaneous record
+(append-only history; the historical record is not rewritten). Where such a
+statement could be read as describing the *current* lifecycle state, this
+section supersedes it; the statement itself is left unedited. The
+machine-readable `reproducibility.json` field `merge` is likewise left
+byte-unchanged on purpose, so the pack's own hash and regeneration gates stay
+valid at the recorded tip.
+
+*Repository visibility note:* the host repository is public, so this pack is
+world-readable on `main`. No PyPI/npm release, website deployment, or other
+external-service publication was performed.
+
+---
+
+*Post-review integration section added 2026-09-21 as documentation-only
+reconciliation. No empirical artifact, configuration, dataset manifest,
+experiment identity, ledger row, number, or finding was changed; no
+rerun, retune, or reacquisition was performed.*
+
 ## What this lane produced
 
 A publication pack for the accepted D9-D sentiment/filing-text evidence, on branch
