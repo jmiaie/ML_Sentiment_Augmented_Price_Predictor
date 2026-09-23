@@ -5,6 +5,91 @@ No merge. No external publication. No D11. No central control-plane edits.
 
 *(Authoring-phase status — 2026-09-18. Superseded as a statement of current state: the pack is now integrated on `main`. See "Post-review integration status" at the top of this file.)*
 
+## Final Directive #10 program sign-off — 2026-09-23
+
+**This section is current. It supersedes every "sign-off pending" statement in this
+file**, including the reconciliation-phase lifecycle conclusion and program-state
+lines recorded below, which are retained unedited as the historical record.
+
+An independent clean-room review of the live four-stream D10 heads concluded
+`DIRECTIVE #10 PUBLICATION PACK SIGN-OFF: YES`, with final counts **P0 = 0, P1 = 0,
+P2 = 3, P3 = 14** and this lane's verdict **ACCEPT-WITH-RESIDUALS**. No accepted
+dataset, configuration, manifest, result artifact, experiment identity, ledger row,
+table, figure, estimate, interval or finding was found to have changed.
+
+D10 publication-pack program sign-off for D10-D is therefore **COMPLETE** as of
+**2026-09-23**.
+
+| Final closure record | Value |
+| --- | --- |
+| Independently signed reconciliation head | `f7d49738d2d57d7b92bb25ef97be1e0aff98a00a` |
+| Current `main` merge head | `38c9f4a82cfdaa1965df6b00165b66799277ed62` |
+| Merge tree vs signed head | **Byte-identical — zero changed files.** `git diff --name-only f7d49738d2d57d7b92bb25ef97be1e0aff98a00a 38c9f4a82cfdaa1965df6b00165b66799277ed62` returns empty (re-measured 2026-09-23). The integration carried the reviewed tree forward unchanged. |
+| Accepted evidence changed by integration | **None.** No rerun, retrain, refit, retune, reacquire, or result replacement was performed. |
+| Administrative status | Closure **packaged, not merged**. This section is a status record; it is **not merge authorization**, and it does not decide whether Directive #10 is formally closed. |
+
+### What this sign-off does not assert
+
+It records that the publication pack on `main` is the independently reviewed pack.
+**Explicitly refused claims.** This section does **not** assert any of the following
+phrases, or their substance: "predictive edge"; "alpha"; "economic significance";
+deployment, production or live-trading approval; or prospective/live validation. The binding 2025 label remains **`PREVIOUSLY INSPECTED / HISTORICAL EVALUATION`**, and the study's conclusion is a **failure to demonstrate** an improvement — not a demonstrated effect in either direction.
+
+### Preserved findings and classifications
+
+- The binding 2025 label **`PREVIOUSLY INSPECTED / HISTORICAL EVALUATION`**.
+- The measured values: **`n = 197`** evaluation rows; headline log-loss delta
+  **`+0.0040902`**; interval **`[-0.0048506, +0.0108001]`** (includes zero);
+  balanced-accuracy delta approximately **`-0.02747`**.
+- **The failure-to-demonstrate conclusion and every non-overclaim boundary**, including the
+  fold-distribution carry-over disclosure (P2.1) described below as a disclosure rather
+  than a repaired defect.
+
+### Residual register — preserved, not closed
+
+Sign-off does **not** imply zero remaining maintenance work, and this closure change
+does not silently close any residual. The independent review recorded:
+
+**P2 (disclosed, open)**
+
+1. The pack classifies the same-repository ancestor `ca185e4…` as
+   external/unresolvable. **Left in the residual backlog rather than changed here.**
+2. The reported fold-delta distribution is identical element-for-element across the
+   development and validation artifacts, and `walk_forward_fold_count` is reported as a
+   formation plan rather than a per-period measurement (disclosed, not repaired).
+3. The frozen configuration's `C` sits at the lower edge of its grid (disclosed as a
+   limitation, explicitly not a licence to widen the grid after the fact).
+4. The named required report is absent at the accepted head; this pack is its first attempt.
+5. The 2025 evaluation block is 197 rows, so the intervals are wide relative to the
+   effects under discussion.
+   See "Findings by severity" below for the full register; none of it is repaired here.
+
+**P3 (shared register, disclosed, open)**
+
+- FDM formation/development explanatory prose and early publication-commit ordering;
+- Stat-Arb canonical source-gate presentation and stale superseded-ledger-row count;
+- Options stale source-map manifest-hash instruction;
+- Sentiment combined-model margin wording and majority-baseline model description;
+- the shared reconciliation-baseline table omission (**corrected in this round**) and the
+  A/B/C workflow-trigger prose (**corrected in this round**) — the only two shared
+  administrative items authorized for correction in this round.
+
+### Supersession wording
+
+The reconciliation-phase conclusions **"INTEGRATED ON MAIN / FINAL D10 PROGRAM
+SIGN-OFF PENDING"** and **"Final D10 program sign-off remains PENDING"** are
+superseded by this statement:
+
+> **D10 publication-pack program sign-off is complete as of 2026-09-23 at merged
+> head `38c9f4a82cfdaa1965df6b00165b66799277ed62`, on the independently signed head `f7d49738d2d57d7b92bb25ef97be1e0aff98a00a`, with the merge tree
+> byte-identical to that signed head and the P2/P3 residuals above preserved and
+> undisputed.**
+
+The superseded wording is retained verbatim below as the reconciliation-phase
+record rather than rewritten.
+
+---
+
 ## Post-review integration status
 
 This publication pack was originally authored and reviewed under a
@@ -14,14 +99,17 @@ below as a historical record of the authoring phase.
 The pack has subsequently been integrated into `main`. This integration does
 not, by itself, constitute Directive #10 program sign-off.
 
-Current lifecycle status:
-INTEGRATED ON MAIN / FINAL D10 PROGRAM SIGN-OFF PENDING.
+Current lifecycle status: **SUPERSEDED 2026-09-23 — see "Final Directive #10
+program sign-off" at the top of this file.** As recorded at the 2026-09-21
+reconciliation, this cell read **"INTEGRATED ON MAIN / FINAL D10 PROGRAM
+SIGN-OFF PENDING."** That wording is retained here as the reconciliation-phase
+record rather than rewritten.
 
 | Integration record | Value |
 | --- | --- |
 | Accepted D9 head | `9184eff7571f8911f410632df8a06601c98311bc` (evidence head) — accepted producing-code head `0fa6cfd3e124f36eea3383af7da2f71b6c43934f` |
 | Cleared publication head / accepted publication ancestor | `457586331f1dcdf92dee312a3cae623542406364` (cleared ancestor; PR #6 head `3972c43941219a47415bd621aff19bd8a576e9af`) |
-| `main` head at the reconciliation baseline (frozen 2026-09-21; a reference point, not a permanently-current value — verify with `git ls-remote <repo> refs/heads/main`) |
+| `main` head at the reconciliation baseline (frozen 2026-09-21; a reference point, not a permanently-current value — verify with `git ls-remote <repo> refs/heads/main`)  `77a2390c460f2c609e5a39c36feed7da56a794e3` — restored 2026-09-23; this cell was left blank at reconciliation. |
 | Integration path | Pack authored on `publication/sentiment-study`; PR **#5** merged it into `research/d9d-cap-lift` (`beff3d1b7c`); PR **#4** merged the D9-D study branch into `main` (`0cafe8ef`); PR **#6** merged `publication/sentiment-study` → `main` after conflict resolution (`77a2390`, 2026-09-18T20:32:14Z). `main`'s head **is** that merge commit. |
 | Relevant pull requests | #4 (D9-D study, merged), #5 (pack, merged), #6 (`main` integration, merged); #7, #2 remain open (PR hygiene inventory) |
 | Exact-head CI evidence | At exact `main` merge head `77a2390c`: `ci` run `35391992114` (success) — https://github.com/jmiaie/ML_Sentiment_Augmented_Price_Predictor/actions/runs/35391992114 ; `publication-pack` run `35391992514` (success) — https://github.com/jmiaie/ML_Sentiment_Augmented_Price_Predictor/actions/runs/35391992514 . |
@@ -29,12 +117,19 @@ INTEGRATED ON MAIN / FINAL D10 PROGRAM SIGN-OFF PENDING.
 | Diff from accepted D9 is publication-only | **No — publication pack plus D9-D producing-path code.** `git diff --name-status 9184eff7 77a2390c` yields the pack and `.github/workflows/publication-pack.yml`, **plus** `scripts/acquire_edgar_8k_yf_megacap_daily.py` (M), `src/quant_sentiment/edgar_filings.py` / `hashing.py` / `market_data_io.py` (A), `src/quant_sentiment/sec_http.py` (M), `tests/test_sec_http.py` (A), `README.md` (M) and `src/quant_sentiment.egg-info/*` (M) — attributed to commit `ca185e4` (“D9-D: pre-registration fix, full v1 decoupling, env-sourced SEC_USER_AGENT, provenance”, PR #4). **No file under `results/`, `configs/` or `data/` changed**: no accepted result artifact, configuration, dataset manifest, experiment identity, or ledger row was altered, and no rerun was performed. |
 | Disclosed integration nuance | (1) The pack directory at `main` is **not** byte-identical to the cleared ancestor `457586331`: `git diff 457586331 77a2390c -- publication/sentiment-study/` returns exactly one file, `scripts/publication_pack.py`, from commit `24259e8` (“lint: reflow pack script to line-length=100 (formatting only)”, 5 insertions / 2 deletions, both re-wraps of existing string literals) — no semantic change to any hash, citation, or regeneration gate. PR #6's merge message states the pack directory remained byte-identical to the cleared tip: that holds for the merge *resolution*, but not literally for the final pack directory versus `457586331` as of `24259e8`. (2) `main` joins two D9-D lines — the evidence line (`0fa6cfd3` → `9184eff7`) and the producing-code/decoupling line (`ca185e4`, PR #4). |
 
+*(Superseded 2026-09-23 for D10 only: D10 publication-pack program sign-off is now
+complete — see "Final Directive #10 program sign-off" at the top of this
+file. The D9 and D11–D13 wording below is unchanged and remains current.)*
+
 **Current program state.** D9: COMPLETE / ACCEPTED. D10: TECHNICALLY
 INTEGRATED / FORMAL SIGN-OFF PENDING. D11: PARTIALLY STARTED THROUGH THE
 PUBLIC HUB / NOT FORMALLY ACTIVATED. D12: DRAFTED / BLOCKED BY D11 HIRING
 EVIDENCE. D13: DRAFTED / NOT YET JUSTIFIED.
 
-**Final D10 program sign-off remains PENDING.** No authoritative
+**Superseded 2026-09-23 — an authoritative D10 publication-pack program
+sign-off has since been issued; see "Final Directive #10 program sign-off" at
+the top of this file. The paragraph below is the reconciliation-phase record,
+retained unedited.** No authoritative
 `DIRECTIVE #10 PUBLICATION PACK SIGN-OFF: YES` has been issued for this pack.
 A D9 program sign-off is not a D10 program sign-off. This section records
 integration state only: it is not a sign-off, and it does not strengthen,
