@@ -99,6 +99,11 @@ below as a historical record of the authoring phase.
 The pack has subsequently been integrated into `main`. This integration does
 not, by itself, constitute Directive #10 program sign-off.
 
+> **SUPERSEDED 2026-09-23** — the two lines immediately below are the reconciliation-phase record, retained unedited. The current lifecycle status follows them.
+
+Current lifecycle status:
+INTEGRATED ON MAIN / FINAL D10 PROGRAM SIGN-OFF PENDING.
+
 Current lifecycle status: **SUPERSEDED 2026-09-23 — see "Final Directive #10
 program sign-off" at the top of this file.** As recorded at the 2026-09-21
 reconciliation, this cell read **"INTEGRATED ON MAIN / FINAL D10 PROGRAM
@@ -126,10 +131,9 @@ INTEGRATED / FORMAL SIGN-OFF PENDING. D11: PARTIALLY STARTED THROUGH THE
 PUBLIC HUB / NOT FORMALLY ACTIVATED. D12: DRAFTED / BLOCKED BY D11 HIRING
 EVIDENCE. D13: DRAFTED / NOT YET JUSTIFIED.
 
-**Superseded 2026-09-23 — an authoritative D10 publication-pack program
-sign-off has since been issued; see "Final Directive #10 program sign-off" at
-the top of this file. The paragraph below is the reconciliation-phase record,
-retained unedited.** No authoritative
+> **SUPERSEDED 2026-09-23** — an authoritative D10 publication-pack program sign-off has since been issued; see "Final Directive #10 program sign-off" at the top of this file. The paragraph below is the reconciliation-phase record, retained unedited.
+
+**Final D10 program sign-off remains PENDING.** No authoritative
 `DIRECTIVE #10 PUBLICATION PACK SIGN-OFF: YES` has been issued for this pack.
 A D9 program sign-off is not a D10 program sign-off. This section records
 integration state only: it is not a sign-off, and it does not strengthen,
