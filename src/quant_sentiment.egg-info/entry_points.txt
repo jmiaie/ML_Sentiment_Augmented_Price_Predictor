@@ -1,2 +1,0 @@
-[console_scripts]
-quant-sentiment-synthetic-validation = quant_sentiment.synthetic_validation:main
