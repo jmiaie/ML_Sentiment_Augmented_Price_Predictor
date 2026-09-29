@@ -72,6 +72,7 @@ def test_holdout_blocked_without_flag() -> None:
         )
 
 
+@pytest.mark.slow
 def test_run_period_ablation_formation(tmp_path: Path) -> None:
     calendar = USMarketCalendar()
     # Long enough formation window

@@ -97,6 +97,7 @@ def test_2025_evaluation_blocked_without_allow_holdout(event_frame: pd.DataFrame
         )
 
 
+@pytest.mark.slow
 def test_deterministic_c_selection_is_reproducible(event_frame: pd.DataFrame) -> None:
     formation = PeriodSpec("formation_dev", "2015-01-01", "2018-12-31")
     validation = PeriodSpec("validation", "2019-01-01", "2019-12-31")
@@ -124,6 +125,7 @@ def test_deterministic_c_selection_is_reproducible(event_frame: pd.DataFrame) ->
     assert result_a["key_metrics"]["model3_log_loss"] == result_b["key_metrics"]["model3_log_loss"]
 
 
+@pytest.mark.slow
 def test_run_produces_headline_delta_and_bootstrap_ci(event_frame: pd.DataFrame) -> None:
     formation = PeriodSpec("formation_dev", "2015-01-01", "2018-12-31")
     validation = PeriodSpec("validation", "2019-01-01", "2019-12-31")
@@ -153,6 +155,7 @@ def test_run_produces_headline_delta_and_bootstrap_ci(event_frame: pd.DataFrame)
         assert c is None or c in C_GRID
 
 
+@pytest.mark.slow
 def test_secondary_target_uses_five_session_embargo(event_frame: pd.DataFrame) -> None:
     formation = PeriodSpec("formation_dev", "2015-01-01", "2018-12-31")
     validation = PeriodSpec("validation", "2019-01-01", "2019-12-31")
@@ -175,6 +178,7 @@ def test_secondary_target_uses_five_session_embargo(event_frame: pd.DataFrame) -
     assert result["key_metrics"]["embargo_sessions"] == 5
 
 
+@pytest.mark.slow
 def test_allow_holdout_true_permits_2025_style_period(event_frame: pd.DataFrame) -> None:
     formation = PeriodSpec("formation_dev", "2015-01-01", "2018-12-31")
     historical_eval = PeriodSpec("historical_evaluation", "2019-01-01", "2019-12-31")

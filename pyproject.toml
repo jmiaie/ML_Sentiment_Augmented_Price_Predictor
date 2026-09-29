@@ -44,6 +44,17 @@ where = ["src"]
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
+markers = [
+    "slow: long-running end-to-end study tests (>5s); CI runs them in a separate job. Deselect locally with -m 'not slow'.",
+]
+filterwarnings = [
+    # scikit-learn warns when a small evaluation slice (a bootstrap resample or
+    # a short fold) contains a single class. The metric is still well defined for
+    # our use and the study implementation is hash-pinned, so silence exactly
+    # these two sklearn messages rather than all UserWarnings.
+    "ignore:A single label was found in 'y_true' and 'y_pred':UserWarning:sklearn.metrics._classification",
+    "ignore:y_pred contains classes not in y_true:UserWarning:sklearn.metrics._classification",
+]
 
 [tool.ruff]
 line-length = 100
