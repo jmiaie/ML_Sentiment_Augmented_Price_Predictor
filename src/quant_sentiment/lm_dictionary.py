@@ -101,7 +101,8 @@ def dictionary_provenance() -> LMDictionaryProvenance:
 
     data = pd.read_csv(_CSV_PATH)
     sets = _load_category_sets()
-    digest = hashlib.sha256(open(_CSV_PATH, "rb").read()).hexdigest()
+    with open(_CSV_PATH, "rb") as fh:
+        digest = hashlib.sha256(fh.read()).hexdigest()
     return LMDictionaryProvenance(
         dataset_id=LM_DATASET_ID,
         source="Loughran-McDonald Master Dictionary (https://sraf.nd.edu), "

@@ -371,6 +371,7 @@ def _artifacts(fixture: dict[str, Any]) -> list[str]:
     return sorted(p.name for p in results.glob("*.json"))
 
 
+@pytest.mark.slow
 def test_dev_and_validation_run_writes_artifacts_and_never_2025(
     runner: ModuleType, tmp_path: Path, sessions: pd.DatetimeIndex, calendar: NyseCalendar
 ) -> None:
@@ -705,6 +706,7 @@ def test_production_frozen_inputs_record_pins_the_real_snapshot() -> None:
     }
 
 
+@pytest.mark.slow
 def test_valid_frozen_fixture_records_measured_input_integrity(
     runner: ModuleType, tmp_path: Path, sessions: pd.DatetimeIndex, calendar: NyseCalendar
 ) -> None:
@@ -874,6 +876,7 @@ def test_re_frozen_manifest_refuses(
     assert _artifacts(fixture) == []
 
 
+@pytest.mark.slow
 def test_input_verification_makes_no_network_call(
     runner: ModuleType,
     tmp_path: Path,
@@ -903,6 +906,7 @@ _ENTRY_POINTS: dict[str, tuple[tuple[str, ...], dict[str, Any]]] = {
 }
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize("label", sorted(_ENTRY_POINTS))
 def test_every_entry_point_passes_through_the_same_integrity_gate(
     runner: ModuleType,
