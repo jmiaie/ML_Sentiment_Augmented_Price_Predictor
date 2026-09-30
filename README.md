@@ -1,5 +1,8 @@
 # ML_Sentiment_Augmented_Price_Predictor
 
+> **Canonical** research harness. Empty name-hold twins (`_private` / `_public`) are not alternate codebases.
+> Status / portfolio placement: [`docs/STATUS.md`](docs/STATUS.md).
+
 ## Result
 
 **Sentiment features did not add measurable predictive value over market-only features** on the pre-registered historical evaluation (12 large-cap issuers, SEC EDGAR 10-K/10-Q/8-K text, 2025 evaluation period, primary next-session excess-return direction target):
