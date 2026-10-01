@@ -34,9 +34,11 @@
       "869db9048fd938080669894358aa84bf7d30e557",
       "457586331f1dcdf92dee312a3cae623542406364",
       "3972c43941219a47415bd621aff19bd8a576e9af",
-      "77a2390c460f2c609e5a39c36feed7da56a794e3"
+      "77a2390c460f2c609e5a39c36feed7da56a794e3",
+      "f7d49738d2d57d7b92bb25ef97be1e0aff98a00a",
+      "38c9f4a82cfdaa1965df6b00165b66799277ed62"
     ],
-    "integration_chain_shas_note": "The final three entries are the D10-D publication-line commits cited by name in D10-STATUS.md (previous cleared pack tip, PR #6 head, and the main head that received the pack). They are declared so the pack's undeclared-SHA gate can resolve every commit the status document cites; they are neither producing-code nor evidence heads.",
+    "integration_chain_shas_note": "The first three entries are the D10-D publication-line commits cited by name in D10-STATUS.md: the previous cleared pack tip, the PR #6 head, and the main head that received the pack. Two further commits are declared here at final administrative closure on 2026-09-23 because the final sign-off section cites them by full SHA: f7d49738d2d57d7b92bb25ef97be1e0aff98a00a (the independently signed reconciliation head) and 38c9f4a82cfdaa1965df6b00165b66799277ed62 (the current main merge head). All five are ancestors of main and resolvable with git cat-file. They are declared so the pack's undeclared-SHA gate can resolve every commit the status document cites; they are neither producing-code nor evidence heads, and this declaration records provenance only.",
     "external_git_shas": [
       "ca185e4d4a675559ed3326f33334347909936aaa",
       "6df35d56c5496c1b1dda26c9c7a28f1bc0c6555f"
