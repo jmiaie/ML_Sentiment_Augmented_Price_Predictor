@@ -1,7 +1,7 @@
-# D10-STATUS — lane D (sentiment-study)
+# STATUS — sentiment study publication pack
 
-**Lane status: READY FOR INDEPENDENT D10 REVIEW.**
-No merge. No external publication. No D11. No central control-plane edits.
+**Pack status: READY FOR INDEPENDENT REVIEW.**
+No external publication.
 
 *(Authoring-phase status — 2026-09-18. Superseded as a statement of current state: the pack is now integrated on `main`. See "Post-review integration status" at the top of this file.)*
 
@@ -12,31 +12,26 @@ no-merge / stop-at-independent-review instruction. That language is preserved
 below as a historical record of the authoring phase.
 
 The pack has subsequently been integrated into `main`. This integration does
-not, by itself, constitute Directive #10 program sign-off.
+not, by itself, constitute final publication sign-off.
 
 Current lifecycle status:
-INTEGRATED ON MAIN / FINAL D10 PROGRAM SIGN-OFF PENDING.
+INTEGRATED ON MAIN / FINAL PUBLICATION SIGN-OFF PENDING.
 
 | Integration record | Value |
 | --- | --- |
-| Accepted D9 head | `9184eff7571f8911f410632df8a06601c98311bc` (evidence head) — accepted producing-code head `0fa6cfd3e124f36eea3383af7da2f71b6c43934f` |
+| Accepted study head | `9184eff7571f8911f410632df8a06601c98311bc` (evidence head) — accepted producing-code head `0fa6cfd3e124f36eea3383af7da2f71b6c43934f` |
 | Cleared publication head / accepted publication ancestor | `457586331f1dcdf92dee312a3cae623542406364` (cleared ancestor; PR #6 head `3972c43941219a47415bd621aff19bd8a576e9af`) |
 | `main` head at the reconciliation baseline (frozen 2026-09-21; a reference point, not a permanently-current value — verify with `git ls-remote <repo> refs/heads/main`) |
-| Integration path | Pack authored on `publication/sentiment-study`; PR **#5** merged it into `research/d9d-cap-lift` (`beff3d1b7c`); PR **#4** merged the D9-D study branch into `main` (`0cafe8ef`); PR **#6** merged `publication/sentiment-study` → `main` after conflict resolution (`77a2390`, 2026-09-18T20:32:14Z). `main`'s head **is** that merge commit. |
-| Relevant pull requests | #4 (D9-D study, merged), #5 (pack, merged), #6 (`main` integration, merged); #7, #2 remain open (PR hygiene inventory) |
+| Integration path | Pack authored on `publication/sentiment-study`; PR **#5** merged it into `research/d9d-cap-lift` (`beff3d1b7c`); PR **#4** merged the study branch into `main` (`0cafe8ef`); PR **#6** merged `publication/sentiment-study` → `main` after conflict resolution (`77a2390`, 2026-09-18T20:32:14Z). `main`'s head **is** that merge commit. |
+| Relevant pull requests | #4 (v2 study, merged), #5 (pack, merged), #6 (`main` integration, merged); #7, #2 remain open (PR hygiene inventory) |
 | Exact-head CI evidence | At exact `main` merge head `77a2390c`: `ci` run `35391992114` (success) — https://github.com/jmiaie/ML_Sentiment_Augmented_Price_Predictor/actions/runs/35391992114 ; `publication-pack` run `35391992514` (success) — https://github.com/jmiaie/ML_Sentiment_Augmented_Price_Predictor/actions/runs/35391992514 . |
 | Exact-head CI evidence — remediation branch | `reconcile/d10-d-lifecycle`. Both workflows run on every push to this branch, so the current head's runs are listed at https://github.com/jmiaie/ML_Sentiment_Augmented_Price_Predictor/actions?query=branch%3Areconcile%2Fd10-d-lifecycle (this documentation-only push triggers both). Most recent completed runs, at commit `37ff44daca` — the commit immediately preceding this edit: `ci` run `35660934496` (success) — https://github.com/jmiaie/ML_Sentiment_Augmented_Price_Predictor/actions/runs/35660934496 ; `publication-pack` run `35660934499` (success) — https://github.com/jmiaie/ML_Sentiment_Augmented_Price_Predictor/actions/runs/35660934499 . |
-| Diff from accepted D9 is publication-only | **No — publication pack plus D9-D producing-path code.** `git diff --name-status 9184eff7 77a2390c` yields the pack and `.github/workflows/publication-pack.yml`, **plus** `scripts/acquire_edgar_8k_yf_megacap_daily.py` (M), `src/quant_sentiment/edgar_filings.py` / `hashing.py` / `market_data_io.py` (A), `src/quant_sentiment/sec_http.py` (M), `tests/test_sec_http.py` (A), `README.md` (M) and `src/quant_sentiment.egg-info/*` (M) — attributed to commit `ca185e4` (“D9-D: pre-registration fix, full v1 decoupling, env-sourced SEC_USER_AGENT, provenance”, PR #4). **No file under `results/`, `configs/` or `data/` changed**: no accepted result artifact, configuration, dataset manifest, experiment identity, or ledger row was altered, and no rerun was performed. |
-| Disclosed integration nuance | (1) The pack directory at `main` is **not** byte-identical to the cleared ancestor `457586331`: `git diff 457586331 77a2390c -- publication/sentiment-study/` returns exactly one file, `scripts/publication_pack.py`, from commit `24259e8` (“lint: reflow pack script to line-length=100 (formatting only)”, 5 insertions / 2 deletions, both re-wraps of existing string literals) — no semantic change to any hash, citation, or regeneration gate. PR #6's merge message states the pack directory remained byte-identical to the cleared tip: that holds for the merge *resolution*, but not literally for the final pack directory versus `457586331` as of `24259e8`. (2) `main` joins two D9-D lines — the evidence line (`0fa6cfd3` → `9184eff7`) and the producing-code/decoupling line (`ca185e4`, PR #4). |
+| Diff from accepted study is publication-only | **No — publication pack plus study producing-path code.** `git diff --name-status 9184eff7 77a2390c` yields the pack and `.github/workflows/publication-pack.yml`, **plus** `scripts/acquire_edgar_8k_yf_megacap_daily.py` (M), `src/quant_sentiment/edgar_filings.py` / `hashing.py` / `market_data_io.py` (A), `src/quant_sentiment/sec_http.py` (M), `tests/test_sec_http.py` (A), `README.md` (M) and `src/quant_sentiment.egg-info/*` (M) — attributed to commit `ca185e4` (“v2 study: pre-registration fix, full v1 decoupling, env-sourced SEC_USER_AGENT, provenance”, PR #4). **No file under `results/`, `configs/` or `data/` changed**: no accepted result artifact, configuration, dataset manifest, experiment identity, or ledger row was altered, and no rerun was performed. |
+| Disclosed integration nuance | (1) The pack directory at `main` is **not** byte-identical to the cleared ancestor `457586331`: `git diff 457586331 77a2390c -- publication/sentiment-study/` returns exactly one file, `scripts/publication_pack.py`, from commit `24259e8` (“lint: reflow pack script to line-length=100 (formatting only)”, 5 insertions / 2 deletions, both re-wraps of existing string literals) — no semantic change to any hash, citation, or regeneration gate. PR #6's merge message states the pack directory remained byte-identical to the cleared tip: that holds for the merge *resolution*, but not literally for the final pack directory versus `457586331` as of `24259e8`. (2) `main` joins two study lines — the evidence line (`0fa6cfd3` → `9184eff7`) and the producing-code/decoupling line (`ca185e4`, PR #4). |
 
-**Current program state.** D9: COMPLETE / ACCEPTED. D10: TECHNICALLY
-INTEGRATED / FORMAL SIGN-OFF PENDING. D11: PARTIALLY STARTED THROUGH THE
-PUBLIC HUB / NOT FORMALLY ACTIVATED. D12: DRAFTED / BLOCKED BY D11 HIRING
-EVIDENCE. D13: DRAFTED / NOT YET JUSTIFIED.
-
-**Final D10 program sign-off remains PENDING.** No authoritative
-`DIRECTIVE #10 PUBLICATION PACK SIGN-OFF: YES` has been issued for this pack.
-A D9 program sign-off is not a D10 program sign-off. This section records
+**Final publication sign-off remains PENDING.** No authoritative
+publication-pack sign-off has been issued for this pack.
+Sign-off of the study is not sign-off of this publication pack. This section records
 integration state only: it is not a sign-off, and it does not strengthen,
 weaken, or restate any finding, number, or claim in the pack.
 
@@ -44,7 +39,7 @@ weaken, or restate any finding, number, or claim in the pack.
 
 Every "no merge", "no pull request merged", "draft PR only", "not on `main`",
 "not from `main`", "no external publication", and "READY FOR INDEPENDENT
-(D10) REVIEW" statement preserved below, or elsewhere in this directory, is
+REVIEW" statement preserved below, or elsewhere in this directory, is
 **authoring-phase language** kept deliberately as the contemporaneous record
 (append-only history; the historical record is not rewritten). Where such a
 statement could be read as describing the *current* lifecycle state, this
@@ -64,9 +59,9 @@ reconciliation. No empirical artifact, configuration, dataset manifest,
 experiment identity, ledger row, number, or finding was changed; no
 rerun, retune, or reacquisition was performed.*
 
-## What this lane produced
+## What this pack produced
 
-A publication pack for the accepted D9-D sentiment/filing-text evidence, on branch
+A publication pack for the accepted v2 study's sentiment/filing-text evidence, on branch
 `publication/sentiment-study`, which was created from the exact accepted evidence
 head. The pack is draft-pull-request material only.
 
@@ -107,7 +102,7 @@ Recorded so a reviewer does not have to rediscover them:
    was initialised, so it would have raised instead of reporting. Fixed; a negative
    test confirms the gate now fails closed and reports cleanly.
 3. The overclaim guard was first written as plain negation-aware substring
-   matching, then found to raise a false positive on a quoted red-team attack.
+   matching, then found to raise a false positive on a quoted review attack.
    It was rebuilt with QUOTE-EXEMPT handling: a token entirely inside a balanced
    double-quoted span is treated as quoted text being named or attacked, while
    ordinary prose stays strictly negation-governed. It ships with `--selftest`
@@ -129,7 +124,7 @@ Recorded so a reviewer does not have to rediscover them:
 ## Empirical status
 
 - The 2025 evaluation was executed exactly once, before this pack existed, in one
-  invocation covering both targets. This lane re-executed nothing.
+  invocation covering both targets. This pack re-executed nothing.
 - No accepted artifact was modified. The declared hashes of the accepted evidence
   equal the bytes on disk at the accepted head, verified by `check`.
 - No configuration, hypothesis, universe, target or period label was changed.
@@ -163,7 +158,7 @@ audit is recorded because an audit trail that shows only the wins is not one.
 1. **P1-1 — the source gate used an invented field list.** `SOURCE-GATE.md` had
    claimed no program-defined schema existed and had authored its own fourteen
    fields. It now uses the authoritative fourteen-field contract defined by
-   Directive #10, and the claim that no schema exists is removed. The former extra
+   the study protocol, and the claim that no schema exists is removed. The former extra
    sections are retained as unnumbered pack detail after the fourteen fields.
 2. **P1-2 — wording implied the 2025 period was fresh.** `CASE-STUDY.md` said the
    specification was fixed "before 2025 was touched", and that the result came from
@@ -179,7 +174,7 @@ audit is recorded because an audit trail that shows only the wins is not one.
    rule out as "a large, reliable improvement", but this study defines no
    minimum-effect threshold, so the word was doing substantive work after the fact.
    The sentence now states the compatibility claim and the actual bounds.
-5. **P2-2 — a stale red-team finding.** `CLAIM-RED-TEAM.md` CRT-4 still said the §7
+5. **P2-2 — a stale review finding.** `CLAIM-RED-TEAM.md` CRT-4 still said the §7
    and §8 values were not independently contract-checked. Resolved by extending the
    check rather than by restating the gap: `claim_crosscheck.py` now compares every
    quantitative cell printed in §7 and §8 — the model log losses, the headline
@@ -190,13 +185,13 @@ audit is recorded because an audit trail that shows only the wins is not one.
 
 - No retraining, retuning, data reacquisition, or re-execution of the 2025
   evaluation. No change to hypotheses, universes, targets or period labels.
-- No accepted D9 artifact altered; superseded evidence preserved as-is.
+- No accepted study artifact altered; superseded evidence preserved as-is.
 - No metric, statistical claim, or performance figure invented. Null results
   reported as null. No risk-adjusted or excess-return performance number is
   reported, because none was computed.
-- No pull request merged. No external publication. No D11 work started.
+- No pull request merged. No external publication. No follow-on work started.
 - The central `quant-research-portfolio` repository and central Issue #3 are
-  untouched, as is the stale sentiment pull request #4. The other lane's
+  untouched, as is the stale sentiment pull request #4. The other study's
   publications were not touched.
 
 ## For the independent reviewer
@@ -216,5 +211,5 @@ audit is recorded because an audit trail that shows only the wins is not one.
    not described as a defect that was fixed.
 7. Confirm the binding 2025 label appears verbatim and is not softened anywhere.
 
-A new specific defect, demonstrated from live artifacts, reopens this lane. Style
+A new specific defect, demonstrated from live artifacts, reopens this pack. Style
 preferences and additional wish-list analyses do not.

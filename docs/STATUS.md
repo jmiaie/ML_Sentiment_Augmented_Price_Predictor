@@ -43,4 +43,3 @@ No paid APIs, network downloads, or GPU required for the synthetic path. Optiona
 
 1. Keep twins archived or README-pointer-only (avoid dual maintenance)
 2. Optional: one-line hub entry under quant-research-portfolio linking this RESULT
-3. Leave draft admin PR #10 closed-or-draft unless Jeff wants formal D10 sign-off
