@@ -1,4 +1,4 @@
-# CLAIM-REGISTER — D10-D (sentiment-study)
+# CLAIM-REGISTER — sentiment study
 
 Every substantive claim this pack makes, with its evidence citation and its status.
 Status vocabulary is fixed: **SUPPORTED** (measured, cited), **DISCLOSED**
@@ -42,7 +42,7 @@ Citations refer to `RESULT-SOURCE-MAP.md`.
 | CL-31 | No tradeable strategy, position sizing or capacity result is asserted | C-01–C-08 | NOT CLAIMED |
 | CL-32 | No causal mechanism is asserted for either the direction or the absence of an effect | C-01–C-08 | NOT CLAIMED |
 | CL-33 | Results are not generalised beyond 12 large-cap US issuers, three filing forms, a dictionary representation, and 1- and 5-session horizons | C-08 | NOT CLAIMED |
-| CL-34 | The pack modifies no accepted D9 artifact; artifact hashes at the accepted head equal the values this pack declares | C-01–C-18 | SUPPORTED |
+| CL-34 | The pack modifies no accepted study artifact; artifact hashes at the accepted head equal the values this pack declares | C-01–C-18 | SUPPORTED |
 | CL-35 | The pack performs no network access, no fitting, no C selection and no re-execution | C-15, pack scripts | SUPPORTED |
 | CL-36 | The 2025 period is not described as a holdout of any kind | C-01, C-02, C-12 | SUPPORTED |
 

@@ -1,4 +1,4 @@
-# CLAIM-RED-TEAM — D10-D (sentiment-study)
+# CLAIM-RED-TEAM — sentiment study
 
 Adversarial review of what this pack *says*, as distinct from what it measured. The
 job here is to find a sentence that outruns its evidence, a label that got softened,
@@ -77,16 +77,16 @@ Partly fair. Three independent mechanisms exist: the generator verifies its own
 outputs byte-for-byte, the cross-checker is a deliberately separate script with no
 shared helpers or constants with the generator so a bug in one cannot mask a false
 claim in the other, and CI runs both at full history depth. What is genuinely
-self-assessed is this document and the other red-team documents. Disposition:
+self-assessed is this document and the other review documents. Disposition:
 **UPHELD as a structural limitation**, disclosed; the mitigation is that every
-red-team claim is tied to a command a reviewer can run, and that the lane stops at
-READY FOR INDEPENDENT D10 REVIEW rather than self-certifying.
+review claim is tied to a command a reviewer can run, and that the pack stops at
+READY FOR INDEPENDENT REVIEW rather than self-certifying.
 
 **CRT-10 — "Did the pack quietly fix, clean up or re-freeze anything to make the
 story tidier?"**
 No. Two things would have been easy to tidy and were deliberately left alone: the
 fold-delta carry-over (P2.1) and the `C` boundary solution (P2.2). Both are
-disclosed as accepted-evidence properties. The only edits this lane made were to
+disclosed as accepted-evidence properties. The only edits this pack made were to
 its own pack text and its own scripts. Disposition: **REJECTED**, testable by
 comparing declared artifact hashes against disk.
 
