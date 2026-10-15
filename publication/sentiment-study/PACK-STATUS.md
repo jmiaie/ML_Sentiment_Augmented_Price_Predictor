@@ -1,9 +1,11 @@
 # STATUS — sentiment study publication pack
 
-**Pack status: READY FOR INDEPENDENT REVIEW.**
+**Current pack status: INTEGRATED ON `main` / PUBLICATION-PACK SIGN-OFF COMPLETE.**
 No external publication.
 
-*(Authoring-phase status — 2026-09-18. Superseded as a statement of current state: the pack is now integrated on `main`. See "Post-review integration status" at the top of this file.)*
+*(The original authoring-phase status was READY FOR INDEPENDENT REVIEW on
+2026-09-18. That status is superseded; the historical review record below is
+preserved.)*
 
 ## Post-review integration status
 
@@ -15,7 +17,7 @@ The pack has subsequently been integrated into `main`. This integration does
 not, by itself, constitute final publication sign-off.
 
 Current lifecycle status:
-INTEGRATED ON MAIN / FINAL PUBLICATION SIGN-OFF PENDING.
+**INTEGRATED ON `main` / PUBLICATION-PACK SIGN-OFF COMPLETE (2026-09-23).**
 
 | Integration record | Value |
 | --- | --- |
@@ -29,11 +31,24 @@ INTEGRATED ON MAIN / FINAL PUBLICATION SIGN-OFF PENDING.
 | Diff from accepted study is publication-only | **No — publication pack plus study producing-path code.** `git diff --name-status 9184eff7 77a2390c` yields the pack and `.github/workflows/publication-pack.yml`, **plus** `scripts/acquire_edgar_8k_yf_megacap_daily.py` (M), `src/quant_sentiment/edgar_filings.py` / `hashing.py` / `market_data_io.py` (A), `src/quant_sentiment/sec_http.py` (M), `tests/test_sec_http.py` (A), `README.md` (M) and `src/quant_sentiment.egg-info/*` (M) — attributed to commit `ca185e4` (“v2 study: pre-registration fix, full v1 decoupling, env-sourced SEC_USER_AGENT, provenance”, PR #4). **No file under `results/`, `configs/` or `data/` changed**: no accepted result artifact, configuration, dataset manifest, experiment identity, or ledger row was altered, and no rerun was performed. |
 | Disclosed integration nuance | (1) The pack directory at `main` is **not** byte-identical to the cleared ancestor `457586331`: `git diff 457586331 77a2390c -- publication/sentiment-study/` returns exactly one file, `scripts/publication_pack.py`, from commit `24259e8` (“lint: reflow pack script to line-length=100 (formatting only)”, 5 insertions / 2 deletions, both re-wraps of existing string literals) — no semantic change to any hash, citation, or regeneration gate. PR #6's merge message states the pack directory remained byte-identical to the cleared tip: that holds for the merge *resolution*, but not literally for the final pack directory versus `457586331` as of `24259e8`. (2) `main` joins two study lines — the evidence line (`0fa6cfd3` → `9184eff7`) and the producing-code/decoupling line (`ca185e4`, PR #4). |
 
-**Final publication sign-off remains PENDING.** No authoritative
-publication-pack sign-off has been issued for this pack.
-Sign-off of the study is not sign-off of this publication pack. This section records
-integration state only: it is not a sign-off, and it does not strengthen,
-weaken, or restate any finding, number, or claim in the pack.
+**Final publication-pack sign-off is COMPLETE as of 2026-09-23.** This lifecycle
+correction records the governing portfolio decision (acceptance with residuals);
+it does not strengthen,
+weaken, or restate any empirical finding.
+
+Source: the [portfolio sign-off record](https://github.com/jmiaie/quant-research-portfolio-public/blob/24c041f4b8a02896bf1744122026aea77fed916b/research/publications.md)
+records independent four-stream acceptance with residuals on 2026-09-23
+(P0 = 0, P1 = 0, P2 = 3, P3 = 14 at that review boundary). This is a
+historical program decision, not a fresh review of every later code change.
+The disclosed integration nuances above and remaining maintenance items still apply.
+
+The binding evaluation classification and result remain unchanged:
+`PREVIOUSLY INSPECTED / HISTORICAL EVALUATION`, `n = 197`, headline
+M3-minus-M1 log-loss delta `+0.0040902`, interval
+`[-0.0048506, +0.0108001]` (which includes zero), and an approximately
+`-0.02747` balanced-accuracy delta. The accepted conclusion remains that the
+pre-specified comparison **failed to demonstrate incremental predictive value**
+from adding filing-text features beyond the market-only feature set.
 
 ### How to read the rest of this directory
 

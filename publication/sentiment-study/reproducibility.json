@@ -39,9 +39,10 @@
     "integration_chain_shas_note": "The final three entries are the publication-line commits cited by name in PACK-STATUS.md (previous cleared pack tip, PR #6 head, and the main head that received the pack). They are declared so the pack's undeclared-SHA gate can resolve every commit the status document cites; they are neither producing-code nor evidence heads.",
     "external_git_shas": [
       "ca185e4d4a675559ed3326f33334347909936aaa",
-      "6df35d56c5496c1b1dda26c9c7a28f1bc0c6555f"
+      "6df35d56c5496c1b1dda26c9c7a28f1bc0c6555f",
+      "24c041f4b8a02896bf1744122026aea77fed916b"
     ],
-    "external_git_shas_note": "Hashes of objects in OTHER repositories (the stale sentiment PR #4 and the central hub tip). They cannot be resolved from this clone and are verified as declared values only; they appear in this pack solely to evidence that neither was modified by D10."
+    "external_git_shas_note": "Hashes of objects in OTHER repositories (the stale sentiment PR #4 and the central hub tip). They cannot be resolved from this clone and are verified as declared values only; they appear in this pack solely to evidence that neither was modified by D10. The final entry is the immutable public-portfolio sign-off record cited by PACK-STATUS.md; it records administrative acceptance with residuals and is not an empirical source."
   },
   "experiment": {
     "experiment_id": "sentiment_hist_text_v2",

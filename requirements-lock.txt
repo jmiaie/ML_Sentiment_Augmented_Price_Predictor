@@ -9,10 +9,10 @@
 #   pip install -r requirements-lock.txt && pip install -e . --no-deps
 # pyproject.toml ranges are intentionally unchanged; this file only pins them.
 #
-# Known advisory: nltk (transitive via pysentiment2) is flagged by GHSA-8mgp-746c-j5xp
-# (also reported by pip-audit as PYSEC-2026-3740 / CVE-2026-81726)
-# with no fixed release. It concerns nltk model-training/parser code that this
-# repository never calls. Documented, not removed.
+# Reported advisory: a prior dependency audit flagged nltk (via pysentiment2)
+# as GHSA-8mgp-746c-j5xp with no fixed release. The advisory and current fix
+# status have not been independently re-verified in this documentation update.
+# Retain as an open dependency-review residual, not a security clearance.
 ast-serialize==0.13.0
 beautifulsoup4==4.15.0
 certifi==2026.7.22
