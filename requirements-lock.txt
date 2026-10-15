@@ -1,0 +1,68 @@
+# Resolved, pinned dependency lock for reproducible installs (no hashes).
+# Python: 3.12 (resolved with --python-version 3.12; CI job `locked-env` uses 3.12)
+# Generated: 2026-10-15 with uv 0.13.1
+# Extras:   dev + data (the same set CI installs via `pip install -e ".[dev,data]"`)
+# Regenerate (from the repo root, Python 3.12 venv with uv installed):
+#   uv pip compile pyproject.toml --extra dev --extra data --python-version 3.12 --no-annotate --no-header -o requirements-lock.txt
+#   (then restore this header comment)
+# Install:
+#   pip install -r requirements-lock.txt && pip install -e . --no-deps
+# pyproject.toml ranges are intentionally unchanged; this file only pins them.
+#
+# Known advisory: nltk (transitive via pysentiment2) is flagged by GHSA-8mgp-746c-j5xp
+# (also reported by pip-audit as PYSEC-2026-3740 / CVE-2026-81726)
+# with no fixed release. It concerns nltk model-training/parser code that this
+# repository never calls. Documented, not removed.
+ast-serialize==0.13.0
+beautifulsoup4==4.15.0
+certifi==2026.7.22
+cffi==2.1.1
+charset-normalizer==3.5.2
+click==8.5.0
+cloudpickle==3.1.2
+curl-cffi==0.16.3
+defusedxml==0.7.1
+exchange-calendars==4.13.2
+idna==3.20
+iniconfig==2.3.1
+joblib==1.6.0
+korean-lunar-calendar==0.4.0
+librt==0.16.0
+lxml==6.1.3
+multitasking==0.0.13
+mypy==2.4.0
+mypy-extensions==1.1.0
+narwhals==2.27.1
+nltk==3.10.3
+numpy==2.5.4
+packaging==26.3
+pandas==3.0.6
+pandas-market-calendars==5.5.0
+pathspec==1.1.1
+peewee==4.5.3
+platformdirs==4.13.0
+pluggy==1.6.0
+protobuf==7.36.2
+pycparser==3.11
+pygments==2.21.0
+pyluach==2.3.0
+pysentiment2==0.1.1
+pytest==9.1.1
+python-dateutil==2.9.0.post0
+pytz==2026.5
+pyyaml==6.0.3
+regex==2026.9.29
+requests==2.34.2
+ruff==0.17.0
+scikit-learn==1.9.1
+scipy==1.18.1
+six==1.17.0
+soupsieve==3.0.3
+threadpoolctl==3.7.0
+toolz==1.2.0
+tqdm==4.70.1
+typing-extensions==4.16.0
+tzdata==2026.5
+urllib3==2.8.0
+websockets==17.2
+yfinance==1.7.0

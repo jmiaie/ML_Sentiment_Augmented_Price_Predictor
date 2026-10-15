@@ -77,6 +77,17 @@ python -m quant_sentiment.synthetic_validation \
 
 The generated artifact is explicitly labeled `Synthetic methodology validation` and should not be interpreted as historical evidence.
 
+## Reproducible install
+
+`requirements-lock.txt` pins the full transitive dependency set (resolved on Python 3.12, `dev` and `data` extras, no hashes). To reproduce the tested environment:
+
+```bash
+python3.12 -m venv .venv && . .venv/bin/activate
+python -m pip install -r requirements-lock.txt && python -m pip install -e . --no-deps
+```
+
+The `pyproject.toml` ranges are unchanged; the regenerate command is in the lock header. CI job `locked-env` installs from the lock and runs the fast tests. The transitive `nltk` advisory (GHSA-8mgp-746c-j5xp, no fixed release) concerns code this repository never calls.
+
 ## Repository outputs
 
 - `artifacts/synthetic_methodology_validation.json`: generated synthetic ablation results
