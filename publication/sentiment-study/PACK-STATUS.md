@@ -67,7 +67,7 @@ head. The pack is draft-pull-request material only.
 
 Contents: `SOURCE-GATE.md`, `TECHNICAL-PAPER.md`, `CASE-STUDY.md`,
 `RESULT-SOURCE-MAP.md`, `CLAIM-REGISTER.md`, `QUANT-RED-TEAM.md`,
-`CLAIM-RED-TEAM.md`, `CITATION-RED-TEAM.md`, `D10-STATUS.md`,
+`CLAIM-RED-TEAM.md`, `CITATION-RED-TEAM.md`, `PACK-STATUS.md`,
 `reproducibility.json`, two scripts, three generated tables and one generated
 figure.
 
@@ -190,7 +190,7 @@ audit is recorded because an audit trail that shows only the wins is not one.
   reported as null. No risk-adjusted or excess-return performance number is
   reported, because none was computed.
 - No pull request merged. No external publication. No follow-on work started.
-- The central `quant-research-portfolio` repository and central Issue #3 are
+- The portfolio hub and its study tracker are
   untouched, as is the stale sentiment pull request #4. The other study's
   publications were not touched.
 

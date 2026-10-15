@@ -11,10 +11,10 @@ Sibling placeholders (do **not** treat as products):
 
 | Repo | Role | Notes |
 |------|------|-------|
-| [`ML_Sentiment_Augmented_Price_Predictor_private`](https://github.com/jmiaie/ML_Sentiment_Augmented_Price_Predictor_private) | Empty name-hold (Jan 2026 initial commit only) | size ≈ 0; no methodology code |
+| Non-public name-hold twin | Empty name-hold (Jan 2026 initial commit only) | size ≈ 0; no methodology code |
 | [`ML_Sentiment_Augmented_Price_Predictor_public`](https://github.com/jmiaie/ML_Sentiment_Augmented_Price_Predictor_public) | Empty name-hold | size ≈ 0; no methodology code |
 
-Portfolio narrative home for quant chapters: [`quant-research-portfolio`](https://github.com/jmiaie/quant-research-portfolio) (private hub). This repo is a methodology chapter, not a standalone alpha product.
+Portfolio narrative home for quant chapters: [`quant-research-portfolio-public`](https://github.com/jmiaie/quant-research-portfolio-public). This repo is a methodology chapter, not a standalone alpha product.
 
 ## What is proven here
 
@@ -26,7 +26,7 @@ Portfolio narrative home for quant chapters: [`quant-research-portfolio`](https:
 
 - Live trading performance or “sentiment alpha”
 - That the repository name implies a shipped price predictor
-- That empty `_private` / `_public` twins contain alternate results
+- That empty name-hold twins contain alternate results
 
 ## Offline quickstart
 
@@ -42,4 +42,4 @@ No paid APIs, network downloads, or GPU required for the synthetic path. Optiona
 ## Next actions
 
 1. Keep twins archived or README-pointer-only (avoid dual maintenance)
-2. Optional: one-line hub entry under quant-research-portfolio linking this RESULT
+2. Optional: one-line hub entry under quant-research-portfolio-public linking this RESULT
