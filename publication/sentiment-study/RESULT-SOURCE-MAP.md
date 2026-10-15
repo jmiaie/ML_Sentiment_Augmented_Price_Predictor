@@ -1,4 +1,4 @@
-# RESULT-SOURCE-MAP — D10-D (sentiment-study)
+# RESULT-SOURCE-MAP — sentiment study
 
 Every table, figure and numeric claim in this pack resolves to an accepted artifact
 under `results/`, the append-only ledger, or the frozen configuration. No number in

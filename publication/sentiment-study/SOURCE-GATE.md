@@ -1,7 +1,7 @@
-# SOURCE-GATE — D10-D (sentiment-study)
+# SOURCE-GATE — sentiment study
 
 The fourteen fields below are the authoritative source-gate field contract defined by
-Directive #10. They are populated here from accepted D9-D evidence. Sections printed
+the study protocol. They are populated here from accepted study evidence. Sections printed
 after the fourteen fields are pack detail, not part of the field contract, and are
 not numbered as fields.
 
@@ -56,8 +56,8 @@ secondary
 `b207ed7a5c7923f6bdb0217bdc37963b5e81b37a2dc34788b0696ef822557d12`.
 Both are unchanged by this pack and were not re-derived.
 
-**Field 11 — Independent review status.** *Directive #9 Final Four-Stream Independent
-Program Audit (Grokbot, 2026-09-17 evening PT) — PROGRAM SIGN-OFF: YES; P0=0; P1=0;
+**Field 11 — Independent review status.** *Final four-stream independent
+program audit of the study (2026-09-17 evening PT) — PROGRAM SIGN-OFF: YES; P0=0; P1=0;
 HISTORICAL EMPIRICAL VALIDATION COMPLETE / ACCEPTED.* This is an EXTERNAL program-audit
 citation, accepted by Phase 0 as the authorising sign-off. It is not something this
 publication pack independently re-derived — the pack re-derives only the numbers it
@@ -118,8 +118,8 @@ workflow (ruff, mypy, pytest). All gates fail closed.
 alteration of any accepted artifact, overwrite of superseded evidence, hypothesis change,
 universe change, target change, historical-evaluation label change, suppression of null or
 negative results, invented metric, invented statistical claim, invented risk-adjusted or
-excess-return performance figure, merge of any pull request, external publication, D11
-work, modification of the central `quant-research-portfolio` repository, modification of
+excess-return performance figure, merge of any pull request, external publication,
+follow-on work, modification of the central `quant-research-portfolio` repository, modification of
 central Issue #3, or update to any central hub headline or performance claim. The stale
 sentiment pull request #4 is untouched.
 

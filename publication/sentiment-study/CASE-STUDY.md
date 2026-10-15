@@ -1,4 +1,4 @@
-# CASE-STUDY — D10-D (sentiment-study)
+# CASE-STUDY — sentiment study
 
 ## The decision this study was built to inform
 
@@ -28,7 +28,7 @@ target-aware, so a row is admitted to a period only when its whole target window
 lies inside that period. Training and evaluation are separated by a purge by NYSE
 session distance plus an embargo, not by a row count. Frozen inputs are verified
 by content hash before any fitting, fail-closed. And the comparison, the headline
-metric, the target definitions and the regularisation were frozen before the D9-D
+metric, the target definitions and the regularisation were frozen before the v2 study
 v2 historical-evaluation run was executed.
 
 ## What came back
@@ -54,7 +54,7 @@ therefore does not establish an incremental improvement from the text features.
    evaluation rows with wide intervals is not a demonstration of absence. Anyone
    arguing the opposite direction from this same evidence is overreading it.
 3. **Treat the negative result as the deliverable.** The value here is that the
-   reported result was produced under a specification frozen before this D9-D v2
+   reported result was produced under a specification frozen before this v2 study
    evaluation run, while the period itself remains classified
    `PREVIOUSLY INSPECTED / HISTORICAL EVALUATION`. A result
    obtained that way is reusable. A result obtained by trying representations until

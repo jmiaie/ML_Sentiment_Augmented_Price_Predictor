@@ -1,4 +1,4 @@
-# CITATION-RED-TEAM — D10-D (sentiment-study)
+# CITATION-RED-TEAM — sentiment study
 
 Adversarial review of provenance: every path, hash and mapping in this pack. The
 specific failure this document exists to hunt is a hash whose tail was written by
@@ -119,7 +119,7 @@ by a reviewer, and each is reproducible from the commit history.
    asserted that form counts sum to filing events read. They sum to frame rows,
    2,296, which equal events read, 2,349, minus every documented skip. The paper was
    correct; the checker was corrected instead.
-6. **The overclaim guard produced a false positive on a quoted attack.** A red-team
+6. **The overclaim guard produced a false positive on a quoted attack.** A review
    question quoted the phrase being refuted, and the quotes spanned a line break, so
    no balanced span was recognised and the quoted text was read as an assertion. The
    guard now uses QUOTE-EXEMPT handling and fails closed on malformed quoting. The

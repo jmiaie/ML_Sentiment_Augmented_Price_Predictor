@@ -1,4 +1,4 @@
-# Data layout (Directive #9)
+# Data layout
 
 | Path | Tracked? | Purpose |
 |---|---|---|

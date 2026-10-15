@@ -2,7 +2,7 @@
 
 ### A Historical Walk-Forward Study of SEC Filing-Derived and Market Features
 
-Draft publication document. Lane D, Directive #9 / D10. Micap AI LLC.
+Draft publication document. Micap AI LLC.
 
 ---
 
@@ -12,7 +12,7 @@ We ask one question: does a logistic classifier given Loughran-McDonald
 filing-text features plus market features predict a short-horizon excess-return
 direction better than the same classifier given market features alone? The
 comparison, its metric, its horizon and its regularisation were frozen before this
-D9-D v2 historical-evaluation run was executed; the period itself remains
+v2 historical-evaluation run was executed; the period itself remains
 classified `PREVIOUSLY INSPECTED / HISTORICAL EVALUATION`, and had been inspected
 before this run.
 
@@ -41,7 +41,7 @@ anywhere in this pack, because no such quantity was computed.
 
 ## 1. Scope
 
-This document reports what the frozen D9-D experiment produced. It is a
+This document reports what the frozen v2 experiment produced. It is a
 publication and communication artifact. It performs no fitting, no data
 acquisition, no re-selection of any hyperparameter, and no re-execution of the
 2025 evaluation. Every number below is read from an artifact whose SHA-256 is
@@ -75,7 +75,7 @@ equivalents). FinBERT is not used and is not confirmatory for anything here.
 This universe is a static, present-day selection of large issuers. It carries
 survivorship and selection bias, and the frozen configuration says so explicitly.
 That bias is a property of the accepted evidence, disclosed rather than repaired —
-repairing it would require reacquiring data, which D10 forbids.
+repairing it would require reacquiring data, which the publication-only scope forbids.
 
 ## 3. Targets
 
@@ -214,7 +214,7 @@ its interval should not be treated as a stable estimate of anything.
    periods, including a block with 20 evaluation rows, which points the same way:
    this is formation geometry, not a per-period measurement. Disclosed as a
    provenance observation; the artifacts were not modified to "fix" it, because
-   D10 forbids altering accepted evidence.
+   the publication-only scope forbids altering accepted evidence.
 2. **The fold-delta distribution is empty in the 2025 artifacts.** Under the
    frozen-`C` path the tuner is skipped, so no per-fold deltas are computed. This
    is expected behaviour for a frozen-`C` evaluation, not missing output.

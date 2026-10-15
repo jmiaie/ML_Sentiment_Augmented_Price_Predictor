@@ -1,4 +1,4 @@
-# QUANT-RED-TEAM — D10-D (sentiment-study)
+# QUANT-RED-TEAM — sentiment study
 
 Adversarial quantitative review of this pack. The purpose is to attack the study's
 conclusions and the pack's honesty before an external reviewer does. Each item
@@ -71,11 +71,11 @@ combined and market-only models. Disposition: **UPHELD as a disclosure**
 **QRT-8 — "Static present-day universe. Survivorship bias."**
 True, and stated in the frozen configuration itself, which the pack quotes.
 Disposition: **UPHELD**, `TECHNICAL-PAPER.md` §2; the pack states plainly that
-repairing it would require reacquiring data, which D10 forbids.
+repairing it would require reacquiring data, which the publication-only scope forbids.
 
 **QRT-9 — "One seed. No seed-robustness grid."**
 Correct, and disclosed at §9.8. A seed grid would be new empirical work, outside
-this lane's authority and prohibited by D10. Disposition: **UPHELD** as a
+this pack's authority and prohibited by the publication-only scope. Disposition: **UPHELD** as a
 limitation.
 
 **QRT-10 — "No transaction costs, no capacity, no risk-adjusted return. So the
@@ -104,11 +104,11 @@ It is not, and the pack refuses the word. The binding label is
 gate, the paper and the status document. Disposition: **UPHELD as the correct and
 mandatory framing.**
 
-## Residual risk accepted by this lane
+## Residual risk accepted by this pack
 
 The strongest surviving criticism is sample size (QRT-1) combined with a single
 seed (QRT-9) and a boundary `C` (QRT-7). Together they mean the point estimates in
 this pack should be read as a direction, not a magnitude, and the pack says so
 throughout. No attempt is made to convert this record into a stronger claim, and
 no additional empirical work is performed to shore it up, because both are outside
-this lane's authority.
+this pack's authority.

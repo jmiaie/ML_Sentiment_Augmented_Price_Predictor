@@ -1,4 +1,4 @@
-# Historical text validation artifacts (Directive #9)
+# Historical text validation artifacts
 
 JSON result packs from `scripts/run_historical_text_study.py`.
 
@@ -7,4 +7,4 @@ JSON result packs from `scripts/run_historical_text_study.py`.
 - Holdout 2025: `*_holdout_2025.json` — only after FINAL CONFIGURATION FROZEN
 
 No invented metrics. Nulls reported exactly. Synthetic methodology artifacts
-remain under `artifacts/` and are not D9 historical evidence.
+remain under `artifacts/` and are not historical-study evidence.
