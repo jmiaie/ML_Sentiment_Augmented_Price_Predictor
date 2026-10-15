@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""D10-D independent claim cross-check.
+"""Independent claim cross-check.
 
 Separate from publication_pack.py ON PURPOSE: no shared helpers, no shared
 tables, no shared constants. This script re-derives the pack's claims from the
@@ -21,8 +21,8 @@ from typing import cast
 
 PACK = Path(__file__).resolve().parents[1]
 ROOT = PACK.parents[1]
-DOCS = ["TECHNICAL-PAPER.md", "CASE-STUDY.md", "D10-STATUS.md", "CLAIM-REGISTER.md"]
-PROSE = ["TECHNICAL-PAPER.md", "CASE-STUDY.md", "D10-STATUS.md", "QUANT-RED-TEAM.md",
+DOCS = ["TECHNICAL-PAPER.md", "CASE-STUDY.md", "PACK-STATUS.md", "CLAIM-REGISTER.md"]
+PROSE = ["TECHNICAL-PAPER.md", "CASE-STUDY.md", "PACK-STATUS.md", "QUANT-RED-TEAM.md",
          "CLAIM-RED-TEAM.md", "CITATION-RED-TEAM.md", "SOURCE-GATE.md"]
 
 LABEL_2025 = "PREVIOUSLY INSPECTED / HISTORICAL EVALUATION"

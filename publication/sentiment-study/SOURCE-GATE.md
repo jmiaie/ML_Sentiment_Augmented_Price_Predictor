@@ -102,7 +102,7 @@ network access of any kind.
 
 **Publication artifact set.** `SOURCE-GATE.md`, `TECHNICAL-PAPER.md`, `CASE-STUDY.md`,
 `RESULT-SOURCE-MAP.md`, `CLAIM-REGISTER.md`, `QUANT-RED-TEAM.md`, `CLAIM-RED-TEAM.md`,
-`CITATION-RED-TEAM.md`, `D10-STATUS.md`, `reproducibility.json`,
+`CITATION-RED-TEAM.md`, `PACK-STATUS.md`, `reproducibility.json`,
 `scripts/publication_pack.py`, `scripts/claim_crosscheck.py`, three generated tables and
 one generated figure.
 
@@ -119,8 +119,8 @@ alteration of any accepted artifact, overwrite of superseded evidence, hypothesi
 universe change, target change, historical-evaluation label change, suppression of null or
 negative results, invented metric, invented statistical claim, invented risk-adjusted or
 excess-return performance figure, merge of any pull request, external publication,
-follow-on work, modification of the central `quant-research-portfolio` repository, modification of
-central Issue #3, or update to any central hub headline or performance claim. The stale
+follow-on work, modification of the portfolio hub, modification of
+the hub study tracker, or update to any central hub headline or performance claim. The stale
 sentiment pull request #4 is untouched.
 
 **Reviewer instructions.** Verify the two 2025 artifact hashes independently; re-derive

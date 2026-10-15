@@ -49,7 +49,7 @@ carries the same 90-element list, element for element, although those runs train
 on 1,864 and 1,889 rows respectively. `walk_forward_fold_count` also reads 90 in
 every period, including a block with 20 evaluation rows. A field that does not move
 with its period's training geometry cannot be read as a period-specific statistic.
-Disposition: **UPHELD**, disclosed at `TECHNICAL-PAPER.md` §9.1 and `D10-STATUS.md`
+Disposition: **UPHELD**, disclosed at `TECHNICAL-PAPER.md` §9.1 and `PACK-STATUS.md`
 P2.1. The artifacts were not altered to correct it — that would be a prohibited
 change to accepted evidence — and no published number in this pack depends on that
 field.
