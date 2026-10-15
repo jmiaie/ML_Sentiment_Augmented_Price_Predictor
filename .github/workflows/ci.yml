@@ -46,3 +46,19 @@ jobs:
           python -m pip install -e ".[dev,data]"
       - name: Pytest (slow suite)
         run: pytest -m slow --durations=15
+
+  locked-env:
+    # Reproducible install: exact pins from requirements-lock.txt (Python 3.12).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install from lock
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-lock.txt
+          python -m pip install -e . --no-deps
+      - name: Pytest (fast suite)
+        run: pytest -m "not slow"
