@@ -1,6 +1,6 @@
 # ML_Sentiment_Augmented_Price_Predictor
 
-> **Canonical** research harness. Empty name-hold twins (`_private` / `_public`) are not alternate codebases.
+> **Canonical** research harness. Empty name-hold twins are not alternate codebases.
 > Status / portfolio placement: [`docs/STATUS.md`](docs/STATUS.md).
 
 ## Result

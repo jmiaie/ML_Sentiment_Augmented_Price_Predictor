@@ -21,7 +21,7 @@
 
 ## Overlap / duplicate assessment
 
-No specific named overlap candidates were supplied inside this repository-local directive, and this rebuild does not archive, delete, rename, or modify any external repository or hub entry.
+No specific named overlap candidates were supplied inside this repository-local review, and this rebuild does not archive, delete, rename, or modify any external repository or hub entry.
 
 The safest current interpretation is:
 
@@ -39,7 +39,7 @@ Use language close to the following:
 
 Canonical code: **this repo** (`jmiaie/ML_Sentiment_Augmented_Price_Predictor`).
 
-- `ML_Sentiment_Augmented_Price_Predictor_private` — empty placeholder (initial commit only); not a fork of results.
+- A non-public name-hold twin — empty placeholder (initial commit only); not a fork of results.
 - `ML_Sentiment_Augmented_Price_Predictor_public` — empty placeholder; not a portfolio showcase of this harness.
 
-Hub narrative: treat as a chapter under `quant-research-portfolio`, not a free-standing alpha product. See also `docs/STATUS.md`.
+Hub narrative: treat as a chapter under `quant-research-portfolio-public`, not a free-standing alpha product. See also `docs/STATUS.md`.
