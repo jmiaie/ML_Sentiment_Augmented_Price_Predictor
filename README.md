@@ -5,7 +5,7 @@
 
 ## Result
 
-**Sentiment features did not add measurable predictive value over market-only features** on the pre-registered historical evaluation (12 large-cap issuers, SEC EDGAR 10-K/10-Q/8-K text, 2025 evaluation period, primary next-session excess-return direction target):
+**Sentiment features did not add measurable predictive value over market-only features** on the pre-specified historical evaluation (2025 previously inspected for 3 of 12 issuers; not an untouched holdout) (12 large-cap issuers, SEC EDGAR 10-K/10-Q/8-K text, 2025 evaluation period, primary next-session excess-return direction target):
 
 - n = 197 evaluation filing events
 - combined-minus-market log-loss delta: **+0.0041** (block-bootstrap 95% interval [-0.0049, +0.0108]; positive means the combined model was worse)
@@ -23,7 +23,7 @@ This repository is a lean validation framework for one question:
 It contains two parts:
 
 1. **Synthetic methodology harness**: deterministic, offline synthetic workflows (run in CI) that exercise the point-in-time schema, leakage controls, walk-forward splits and ablations. These are methodology checks only, not historical evidence.
-2. **Historical filing-text evaluation (2015-2025)**: a pre-registered study of Loughran-McDonald lexicon sentiment from SEC EDGAR 10-K/10-Q/8-K filings for 12 large-cap issuers (2015-2023 formation, 2024 validation, 2025 evaluation). It **failed to demonstrate incremental predictive value** over market-only features (see Result above).
+2. **Historical filing-text evaluation (2015-2025)**: a pre-specified study of Loughran-McDonald lexicon sentiment from SEC EDGAR 10-K/10-Q/8-K filings for 12 large-cap issuers (2015-2023 formation, 2024 validation, 2025 evaluation). It **failed to demonstrate incremental predictive value** over market-only features (see Result above).
 
 The current implementation is intentionally modest and reproducible:
 
