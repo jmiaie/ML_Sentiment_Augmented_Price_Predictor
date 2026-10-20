@@ -20,6 +20,11 @@ This repository is a lean validation framework for one question:
 
 > Does point-in-time sentiment add incremental predictive information beyond market-only features for short-horizon asset returns?
 
+It contains two parts:
+
+1. **Synthetic methodology harness**: deterministic, offline synthetic workflows (run in CI) that exercise the point-in-time schema, leakage controls, walk-forward splits and ablations. These are methodology checks only, not historical evidence.
+2. **Historical filing-text evaluation (2015-2025)**: a pre-registered study of Loughran-McDonald lexicon sentiment from SEC EDGAR 10-K/10-Q/8-K filings for 12 large-cap issuers (2015-2023 formation, 2024 validation, 2025 evaluation). It **failed to demonstrate incremental predictive value** over market-only features (see Result above).
+
 The current implementation is intentionally modest and reproducible:
 
 - no paid APIs or credentials
@@ -52,6 +57,7 @@ The package under `src/quant_sentiment` implements:
   - combined logistic regression
 - classification metrics, log loss, Brier score, and calibration-table data
 - deterministic synthetic methodology validation artifacts
+- the historical filing-text study modules (SEC EDGAR filing/text handling, Loughran-McDonald dictionary features, frozen-input hash gate, v2 walk-forward study), driven by `scripts/run_historical_text_study_v2.py`
 
 ## Market-session rules
 
@@ -91,6 +97,7 @@ The `pyproject.toml` ranges are unchanged; the regenerate command is in the lock
 ## Repository outputs
 
 - `artifacts/synthetic_methodology_validation.json`: generated synthetic ablation results
+- `results/historical_text_v2/`: authoritative historical filing-text evaluation artifacts (source of the Result above)
 - `research/sentiment-incremental-predictive-value.md`: research framing and limitations
 - `research/model-risk.md`: model-risk and leakage-control notes
 - `research/holdout-audit.md`: history of the 2025 evaluation window and leakage fixes
@@ -113,3 +120,7 @@ The repository does not claim or implement:
 - economic-performance headline metrics such as Sharpe
 
 Those would require additional reproducible evidence and are intentionally omitted here.
+
+## License
+
+Apache-2.0 — see [LICENSE](LICENSE). © 2026 Micap AI LLC.
