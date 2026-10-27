@@ -1,6 +1,6 @@
 # Resolved, pinned dependency lock for reproducible installs (no hashes).
 # Python: 3.12 (resolved with --python-version 3.12; CI job `locked-env` uses 3.12)
-# Generated: 2026-10-15 with uv 0.13.1
+# Generated: 2026-10-15 with uv 0.13.1; vulnerable pins upgraded 2026-10-27 (uv 0.11.32)
 # Extras:   dev + data (the same set CI installs via `pip install -e ".[dev,data]"`)
 # Regenerate (from the repo root, Python 3.12 venv with uv installed):
 #   uv pip compile pyproject.toml --extra dev --extra data --python-version 3.12 --no-annotate --no-header -o requirements-lock.txt
@@ -15,7 +15,7 @@
 # repository never calls. Documented, not removed.
 ast-serialize==0.13.0
 beautifulsoup4==4.15.0
-certifi==2026.7.22
+certifi==2026.10.23
 cffi==2.1.1
 charset-normalizer==3.5.2
 click==8.5.0
