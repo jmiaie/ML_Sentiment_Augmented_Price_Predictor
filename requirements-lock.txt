@@ -1,6 +1,6 @@
 # Resolved, pinned dependency lock for reproducible installs (no hashes).
 # Python: 3.12 (resolved with --python-version 3.12; CI job `locked-env` uses 3.12)
-# Generated: 2026-10-15 with uv 0.13.1; vulnerable pins upgraded 2026-10-27 (uv 0.11.32)
+# Generated: 2026-10-15 with uv 0.13.1; vulnerable pins upgraded 2026-10-27 and 2026-11-07 (uv 0.11.32)
 # Extras:   dev + data (the same set CI installs via `pip install -e ".[dev,data]"`)
 # Regenerate (from the repo root, Python 3.12 venv with uv installed):
 #   uv pip compile pyproject.toml --extra dev --extra data --python-version 3.12 --no-annotate --no-header -o requirements-lock.txt
@@ -9,10 +9,8 @@
 #   pip install -r requirements-lock.txt && pip install -e . --no-deps
 # pyproject.toml ranges are intentionally unchanged; this file only pins them.
 #
-# Known advisory: nltk (transitive via pysentiment2) is flagged by GHSA-8mgp-746c-j5xp
-# (also reported by pip-audit as PYSEC-2026-3740 / CVE-2026-81726)
-# with no fixed release. It concerns nltk model-training/parser code that this
-# repository never calls. Documented, not removed.
+# nltk (transitive via pysentiment2) is pinned to 3.10.4, which fixes GHSA-8mgp-746c-j5xp
+# (pip-audit: PYSEC-2026-3740 / CVE-2026-81726).
 ast-serialize==0.13.0
 beautifulsoup4==4.15.0
 certifi==2026.10.23
@@ -33,7 +31,7 @@ multitasking==0.0.13
 mypy==2.4.0
 mypy-extensions==1.1.0
 narwhals==2.27.1
-nltk==3.10.3
+nltk==3.10.4
 numpy==2.5.4
 packaging==26.3
 pandas==3.0.6
