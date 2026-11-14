@@ -1,6 +1,6 @@
 # STATUS — sentiment study publication pack
 
-**Pack status: READY FOR INDEPENDENT REVIEW.**
+**Current pack status: INTEGRATED ON `main` / SIGNED OFF (internal multi-agent review, accepted by the owner).**
 No external publication.
 
 *(Authoring-phase status — 2026-09-18. Superseded as a statement of current state: the pack is now integrated on `main`. See "Post-review integration status" at the top of this file.)*
@@ -15,7 +15,7 @@ The pack has subsequently been integrated into `main`. This integration does
 not, by itself, constitute final publication sign-off.
 
 Current lifecycle status:
-INTEGRATED ON MAIN / FINAL PUBLICATION SIGN-OFF PENDING.
+INTEGRATED ON MAIN / SIGNED OFF: internal multi-agent review, accepted by the owner (2026-11-14).
 
 | Integration record | Value |
 | --- | --- |
@@ -29,11 +29,13 @@ INTEGRATED ON MAIN / FINAL PUBLICATION SIGN-OFF PENDING.
 | Diff from accepted study is publication-only | **No — publication pack plus study producing-path code.** `git diff --name-status 9184eff7 77a2390c` yields the pack and `.github/workflows/publication-pack.yml`, **plus** `scripts/acquire_edgar_8k_yf_megacap_daily.py` (M), `src/quant_sentiment/edgar_filings.py` / `hashing.py` / `market_data_io.py` (A), `src/quant_sentiment/sec_http.py` (M), `tests/test_sec_http.py` (A), `README.md` (M) and `src/quant_sentiment.egg-info/*` (M) — attributed to commit `ca185e4` (“v2 study: pre-registration fix, full v1 decoupling, env-sourced SEC_USER_AGENT, provenance”, PR #4). **No file under `results/`, `configs/` or `data/` changed**: no accepted result artifact, configuration, dataset manifest, experiment identity, or ledger row was altered, and no rerun was performed. |
 | Disclosed integration nuance | (1) The pack directory at `main` is **not** byte-identical to the cleared ancestor `457586331`: `git diff 457586331 77a2390c -- publication/sentiment-study/` returns exactly one file, `scripts/publication_pack.py`, from commit `24259e8` (“lint: reflow pack script to line-length=100 (formatting only)”, 5 insertions / 2 deletions, both re-wraps of existing string literals) — no semantic change to any hash, citation, or regeneration gate. PR #6's merge message states the pack directory remained byte-identical to the cleared tip: that holds for the merge *resolution*, but not literally for the final pack directory versus `457586331` as of `24259e8`. (2) `main` joins two study lines — the evidence line (`0fa6cfd3` → `9184eff7`) and the producing-code/decoupling line (`ca185e4`, PR #4). |
 
-**Final publication sign-off remains PENDING.** No authoritative
-publication-pack sign-off has been issued for this pack.
-Sign-off of the study is not sign-off of this publication pack. This section records
-integration state only: it is not a sign-off, and it does not strengthen,
-weaken, or restate any finding, number, or claim in the pack.
+**Publication-pack sign-off was recorded on 2026-11-14.** The basis is an internal multi-agent
+review, accepted by the owner. The reviews were run by AI agents under the owner's direction; no
+external or independent human reviewer took part, and this sign-off should not be read as one.
+It is an administrative lifecycle record: it does not strengthen, weaken, or restate any finding,
+number, or claim in the pack. The conclusion stands as published: the pre-specified comparison
+failed to demonstrate incremental predictive value from filing-text features. The corrections in
+`docs/post-publication-notes.md` and the integration nuances disclosed above still apply.
 
 ### How to read the rest of this directory
 
