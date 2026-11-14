@@ -51,7 +51,7 @@ pytz==2026.5
 pyyaml==6.0.3
 regex==2026.9.29
 requests==2.34.2
-ruff==0.17.0
+ruff==0.17.4
 scikit-learn==1.9.1
 scipy==1.18.1
 six==1.17.0
