@@ -7,6 +7,8 @@ name = "quant-sentiment"
 version = "0.1.0"
 description = "Point-in-time sentiment incremental predictive value validation framework"
 readme = "README.md"
+license = "Apache-2.0"
+authors = [{ name = "Micap AI LLC", email = "contact@micap.pro" }]
 requires-python = ">=3.11"
 dependencies = [
   "numpy>=2.1.1",

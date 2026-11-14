@@ -11,10 +11,12 @@
 - expanding-window walk-forward validation
 - ablation between market-only, sentiment-only, and combined logistic baselines
 - deterministic synthetic methodology validation
+- a pre-specified historical evaluation on real SEC filing text (n = 197; see
+  `publication/sentiment-study/`), which failed to demonstrate incremental predictive value
 
 ## What it does not currently demonstrate
 
-- real historical sentiment alpha
+- historical sentiment alpha (the historical evaluation is a null, and too small to rule out a small effect)
 - production data ingestion
 - economic performance claims
 - model portability across assets or regimes
@@ -26,13 +28,15 @@ No specific named overlap candidates were supplied inside this repository-local 
 The safest current interpretation is:
 
 - keep this repository if a dedicated sentiment-methodology example is useful in the portfolio
-- do not present it as proven historical alpha research until a reproducible point-in-time dataset is added
+- do not present it as historical alpha research: the historical evaluation is a null
 
 ## Suggested hub update
 
 Use language close to the following:
 
-> **ML_Sentiment_Augmented_Price_Predictor** — synthetic methodology harness for evaluating whether point-in-time sentiment could add incremental predictive information beyond market-only features for short-horizon returns; historical results pending a reproducible point-in-time dataset.
+> **ML_Sentiment_Augmented_Price_Predictor** — leakage-safe harness and pre-specified historical study of whether SEC filing-text sentiment adds information beyond market-only features for short-horizon returns. Result: failure to demonstrate (combined-minus-market Δ log loss +0.0041, positive = worse; 95% CI [−0.0049, +0.0108], n = 197).
+
+*(Updated 2026-10-27: the original wording, written before the historical study, described the repository as synthetic-only.)*
 
 
 ## Sibling repository names (2026-09-30)
