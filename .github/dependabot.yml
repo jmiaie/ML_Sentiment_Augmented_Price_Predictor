@@ -4,8 +4,5 @@ updates:
     directory: /
     schedule:
       interval: monthly
-  - package-ecosystem: pip
-    directory: /
-    schedule:
-      interval: monthly
-    open-pull-requests-limit: 5
+  # No pip entry: requirements-lock.txt is upgraded by hand with the uv command
+  # in its header and audited with pip-audit, so Dependabot pip PRs are not used.
