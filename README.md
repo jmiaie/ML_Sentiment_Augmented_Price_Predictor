@@ -92,7 +92,7 @@ python3.12 -m venv .venv && . .venv/bin/activate
 python -m pip install -r requirements-lock.txt && python -m pip install -e . --no-deps
 ```
 
-The `pyproject.toml` ranges are unchanged; the regenerate command is in the lock header. CI job `locked-env` installs from the lock and runs the fast tests. The transitive `nltk` advisory (GHSA-8mgp-746c-j5xp, no fixed release) concerns code this repository never calls.
+The `pyproject.toml` ranges are unchanged; the regenerate command is in the lock header. CI job `locked-env` installs from the lock and runs the fast tests. The transitive `nltk` advisory (GHSA-8mgp-746c-j5xp) is fixed by the locked `nltk==3.10.4`.
 
 ## Repository outputs
 
