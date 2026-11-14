@@ -11,6 +11,9 @@
 - combined-minus-market log-loss delta: **+0.0041** (block-bootstrap 95% interval [-0.0049, +0.0108]; positive means the combined model was worse)
 - combined-minus-market balanced-accuracy delta: **-0.027**
 - The sample is underpowered: it cannot rule out small effects in either direction.
+- On the primary target the market-only comparison model was itself no better than the majority-class baseline (log loss 0.69108 vs 0.69110).
+
+Qualifications added after publication are in [`docs/post-publication-notes.md`](docs/post-publication-notes.md). Research and educational material only; nothing here is investment advice.
 
 Source: `results/historical_text_v2/sentiment_hist_text_v2_primary_historical_evaluation.json`. Write-ups: [case study](publication/sentiment-study/CASE-STUDY.md), [technical paper](publication/sentiment-study/TECHNICAL-PAPER.md).
 
