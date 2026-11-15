@@ -37,6 +37,15 @@ The current implementation is intentionally modest and reproducible:
 
 The historical study evaluates lexicon (Loughran-McDonald) sentiment from SEC EDGAR filings against market-only features; see the [case study](publication/sentiment-study/CASE-STUDY.md) for the full write-up.
 
+**Dictionary terms.** The Loughran-McDonald Master Dictionary belongs to its authors. Their site
+states it is free for academic research and that commercial use needs a licence from them
+([terms](https://sraf.nd.edu/loughranmcdonald-master-dictionary/), checked 2026-11-15). This
+repository does not include the word list: it is read at runtime from the `pysentiment2` package,
+whose copy has source entries up to 2018 (dataset id `lm_master_dictionary_2026_v1` names the year
+it was resolved, not the dictionary release). Cite: Loughran, T. and McDonald, B. (2011), "When Is a
+Liability Not a Liability? Textual Analysis, Dictionaries, and 10-Ks", *Journal of Finance* 66(1),
+35–65.
+
 - Authoritative results (v2): `results/historical_text_v2/`
 - Superseded exploratory results (v1: 3 issuers, 8-K only; preserved, not a source for the result above): `results/historical_text/`
 - Data manifests: `data/manifests/`
