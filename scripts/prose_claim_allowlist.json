@@ -1,0 +1,4 @@
+{
+  "_comment": "Prose numbers legitimately absent from the artifacts. Each entry: file (repo-relative), token (exactly as printed), count (max occurrences allowed), reason. Empty: every prose number is supported by artifacts, configs, manifests, ledger rows or tables.",
+  "entries": []
+}
