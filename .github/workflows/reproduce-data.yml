@@ -1,0 +1,63 @@
+name: Reproduce data
+
+# Re-acquires the frozen Yahoo price dataset and reports whether it still matches its manifest.
+# The SEC EDGAR datasets are not checked: they need the SEC_USER_AGENT secret.
+# Yahoo restates adjusted prices, so DATA DRIFT is an expected, reported outcome. The job
+# fails only when a fetch fails (exit code 2). It never writes a manifest, never commits,
+# and uploads only the JSON report (hashes, counts, dates, versions), never raw CSVs.
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - ".github/workflows/reproduce-data.yml"
+      - "scripts/reproduce_data_check.py"
+
+permissions:
+  contents: read
+
+jobs:
+  reproduce:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-lock.txt
+
+      # The lock pins yfinance==1.7.0, the version recorded in the frozen price manifest.
+      # The package is installed without dependencies, as the locked-env CI job does, because
+      # the check calls its price download functions.
+      - name: Install from lock
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-lock.txt
+          python -m pip install -e . --no-deps
+
+      - name: Re-acquire and compare
+        run: |
+          mkdir -p "$RUNNER_TEMP/reproduce-data"
+          python scripts/reproduce_data_check.py \
+            --json-out "$RUNNER_TEMP/reproduce-data/report.json" \
+            --md-out "$RUNNER_TEMP/reproduce-data/summary.md"
+
+      - name: Write job summary
+        if: always()
+        run: |
+          if [ -f "$RUNNER_TEMP/reproduce-data/summary.md" ]; then
+            cat "$RUNNER_TEMP/reproduce-data/summary.md" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload JSON report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reproduce-data-report
+          path: ${{ runner.temp }}/reproduce-data/report.json
+          if-no-files-found: warn
+          retention-days: 30
